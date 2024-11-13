@@ -1,0 +1,4 @@
+
+[submodule "software/ultralytics"]
+	path = software/ultralytics
+	url = https://github.com/ultralytics/ultralytics.git

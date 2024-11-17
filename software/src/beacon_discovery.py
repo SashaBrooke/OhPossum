@@ -47,7 +47,7 @@ def send_packets():
             time.sleep(DISCOVERY_INTERVAL)
 
 def listen_for_packets():
-    global beacon_mode
+    global beacon_mode, processorIP
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
         sock.bind(("", PORT))
         print(f"Listening for packets on port {PORT}...")
@@ -66,6 +66,7 @@ def listen_for_packets():
                 # Check if packet requests a mode change to Connected
                 if "ENTER_CONNECTED_MODE" in message and beacon_mode == BeaconMode.Discovery:
                     beacon_mode = BeaconMode.Connected
+                    processorIP = addr[0]
                     print("Beacon mode changed to Connected.")
             except Exception as e:
                 print(f"Error receiving packet: {e}")

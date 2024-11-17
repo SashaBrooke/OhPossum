@@ -31,10 +31,10 @@ def send_packets():
     global processor_mode
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-        broadcast_address = (beaconIP, PORT)
         
         while True:
+            broadcast_address = (beaconIP, PORT)
+
             try:
                 if processor_mode == ProcessorMode.FoundPotential:
                     sock.sendto(CONNECTION_COMMAND.encode(), broadcast_address)
@@ -50,14 +50,10 @@ def send_packets():
 def listen_for_packets():
     global processor_mode, beaconIP
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+        sock.bind(("", PORT))
+        print(f"Listening for packets on port {PORT}...")
+        
         while True:
-            if processor_mode == ProcessorMode.Disconnected:
-                sock.bind(("", PORT))
-                print(f"Listening for packets from any IP on port {PORT}...")
-            elif processor_mode == ProcessorMode.FoundPotential or processor_mode == ProcessorMode.Connected:
-                sock.bind((beaconIP, PORT))
-                print(f"Listening for packets from {beaconIP} on port {PORT}...")
-
             try:
                 # Receive data from any sender
                 data, addr = sock.recvfrom(BUFFER_SIZE)
@@ -73,11 +69,11 @@ def listen_for_packets():
                     processor_mode = ProcessorMode.FoundPotential
                     beaconIP = addr[0]
                     print("Found potential beacon.")
-                elif "CONNECTED_PACKET" in message and processor_mode == ProcessorMode.FoundPotential:
+                elif processor_mode == ProcessorMode.FoundPotential and addr[0] == beaconIP and "CONNECTED_PACKET" in message:
                     processor_mode = ProcessorMode.Connected
                     print(f"Connected to beacon at {beaconIP}.")
-                elif processor_mode == ProcessorMode.Connected:
-                    print("Connected.")
+                elif processor_mode == ProcessorMode.Connected and addr[0] == beaconIP:
+                    print("Received packet from connected beacon.")
             except Exception as e:
                 print(f"Error receiving packet: {e}")
 

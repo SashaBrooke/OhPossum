@@ -24,19 +24,21 @@ CONNECTION_MESSAGE = f"[{BEACON_ID}]:CONNECTED_PACKET"
 
 # Initial mode
 beacon_mode = BeaconMode.Discovery
+processorIP = "" # set during discovery process
 
 def send_packets():
     global beacon_mode
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        broadcast_address = ("<broadcast>", PORT)
         
         while True:
             try:
                 if beacon_mode == BeaconMode.Discovery:
+                    broadcast_address = ("<broadcast>", PORT)
                     sock.sendto(DISCOVERY_MESSAGE.encode(), broadcast_address)
                     print("Discovery packet sent.")
                 elif beacon_mode == BeaconMode.Connected:
+                    broadcast_address = (processorIP, PORT)
                     sock.sendto(CONNECTION_MESSAGE.encode(), broadcast_address)
                     print("Connection packet sent.")
             except Exception as e:

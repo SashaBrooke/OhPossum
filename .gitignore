@@ -1,0 +1,6 @@
+# Ignore all files in the software build directory
+software/src/build/
+
+# Ignore compiled binaries
+*.o
+*.exe

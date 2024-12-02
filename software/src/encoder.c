@@ -98,7 +98,7 @@ bool read_raw_angle(repeating_timer_t *timer) {
     i2c_read_blocking(I2C_PORT, addr, raw_angle, 2, false);
 
     // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
-    uint16_t combined_raw_angle = ((raw_angle[0] & 0x0F) << 8) | raw_angle[1];
+    combined_raw_angle = ((raw_angle[0] & 0x0F) << 8) | raw_angle[1];
 
     // Track the number of calls to this function and print at multiples of 100
     static int counter = 0; 

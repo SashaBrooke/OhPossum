@@ -18,10 +18,17 @@
 #define I2C_PORT i2c0             
 #define DIR_PIN 3                
 #define I2C_SDA_PIN 4          
-#define I2C_SCL_PIN 5          
+#define I2C_SCL_PIN 5    
+
+#define TEST_PIN 0
+
+typedef struct repeating_timer repeating_timer_t;
 
 static int addr = 0x36;         /**< I2C address of the AS5600 encoder (can only 
                                      be changed on the AS5600L variant) */
+
+volatile uint16_t combined_raw_angle = 0;
+volatile bool print_flag = false;
 
 /**
  * @brief Initializes the encoder and checks the magnet's status.
@@ -70,6 +77,42 @@ void encoder_init() {
     }
 }
 
+/**
+ * @brief Reads the raw angle data from the AS5600 magnetic encoder and manages a periodic print flag.
+ *
+ * This function is a callback for a repeating timer. It communicates with the AS5600 encoder over I2C
+ * to read the raw angle value and updates a counter. Every 100 calls, it sets a flag (`print_flag`) to
+ * signal the main loop to print the angle value. The function also toggles a GPIO pin (`TEST_PIN`)
+ * for debugging purposes to measure timing.
+ *
+ * @param timer Pointer to the repeating timer structure. Unused in this function.
+ * @return true Always returns true to keep the timer active.
+ */
+bool read_raw_angle(repeating_timer_t *timer) {
+    gpio_put(TEST_PIN, 1); // Pin toggle for debug
+
+    uint8_t RAW_ANGLE_REG = 0x0C;       // Starts at the register for the high byte and increments 
+                                        // once automatically to the register of the low byte
+    uint8_t raw_angle[2];
+    i2c_write_blocking(I2C_PORT, addr, &RAW_ANGLE_REG, 1, true);
+    i2c_read_blocking(I2C_PORT, addr, raw_angle, 2, false);
+
+    // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
+    uint16_t combined_raw_angle = ((raw_angle[0] & 0x0F) << 8) | raw_angle[1];
+
+    // Track the number of calls to this function and print at multiples of 100
+    static int counter = 0; 
+    counter++;
+    if (counter >= 100) {
+        print_flag = true;
+        counter = 0;
+    }
+
+    gpio_put(TEST_PIN, 0); // Pin toggle for debug
+
+    return true;
+}
+
 int main() {
     stdio_init_all();
 
@@ -86,22 +129,20 @@ int main() {
     gpio_set_dir(DIR_PIN, GPIO_OUT);
     gpio_put(DIR_PIN, 0);  /**< Direction set LOW = clockwise */
 
+    gpio_init(TEST_PIN);
+    gpio_set_dir(TEST_PIN, GPIO_OUT);
+    gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
+
     encoder_init();
 
+    struct repeating_timer timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
+    add_repeating_timer_us(-1500, read_raw_angle, NULL, &timer);
+
     while(true) {
-        // Read angle from encoder
-        uint8_t RAW_ANGLE_REG = 0x0C;       // Starts at the register for the high byte and increments 
-                                            // once automatically to the register of the low byte
-        uint8_t raw_angle[2];
-        i2c_write_blocking(I2C_PORT, addr, &RAW_ANGLE_REG, 1, true);
-        i2c_read_blocking(I2C_PORT, addr, raw_angle, 2, false);
-
-        // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
-        uint16_t combined_raw_angle = ((raw_angle[0] & 0x0F) << 8) | raw_angle[1];
-
-        printf("%u\n", combined_raw_angle);
-
-        sleep_ms(100);
+        if (print_flag) {
+            print_flag = false;  /**< Reset print flag */
+            printf("%u\n", combined_raw_angle);
+        }
     }
 
     return 0;

@@ -6,9 +6,17 @@ project(ohpossum-controls)
 
 pico_sdk_init()
 
-add_executable(ohpossum-controls main.c)
+add_executable(ohpossum-controls 
+    encoder.c
+)
 
-target_link_libraries(ohpossum-controls pico_stdlib)
+target_link_libraries(ohpossum-controls 
+    pico_stdlib
+    hardware_i2c
+)
+
+pico_enable_stdio_usb(ohpossum-controls 1)
+pico_enable_stdio_uart(ohpossum-controls 0)
 
 # generate .uf2 .elf .bin
 pico_add_extra_outputs(ohpossum-controls)

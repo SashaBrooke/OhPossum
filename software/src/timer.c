@@ -1,5 +1,5 @@
 /**
- * @file main.c
+ * @file timer.c
  * @brief Prototyping code to test the repeating timer module on Raspberry Pi Pico W.
  * 
  * Uses the repeating timer module to generate a repeating square wave switching

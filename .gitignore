@@ -1,6 +1,9 @@
 # Ignore all files in software build directories
 software/pico/build/
 
+# Ignore IDE settings
+.vscode/
+
 # Ignore compiled binaries
 *.o
 *.exe

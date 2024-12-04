@@ -21,18 +21,21 @@ const uint8_t AS5600_COUNTERCLOCK_WISE  = 1;  //  HIGH
 const float   AS5600_RAW_TO_DEGREES     = 360.0 / 4096;
 const float   AS5600_DEGREES_TO_RAW     = 4096 / 360.0;
 
-typedef struct {
-    // Initialisation
-    bool initialised;
-    i2c_inst_t *i2c;
-
-    // Offset
-    uint16_t offset;
-} AS5600_t;
-
-void AS5600_init(AS5600_t *enc, i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction);
+AS5600_t *AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction);
 
 bool AS5600_isConnected(AS5600_t *enc);
+
+uint8_t AS5600_readStatus(AS5600_t *enc);
+
+bool AS5600_magnetDetected(AS5600_t *enc);
+
+bool AS5600_magnetTooWeak(AS5600_t *enc);
+
+bool AS5600_magnetTooStrong(AS5600_t *enc);
+
+bool AS5600_magnetGood(AS5600_t *enc);
+
+uint8_t AS5600_readAGC(AS5600_t *enc);
 
 uint16_t AS5600_getRawAngle(AS5600_t *enc);
 

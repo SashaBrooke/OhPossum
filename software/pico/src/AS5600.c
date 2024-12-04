@@ -1,5 +1,4 @@
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
+// TODO: Documentation
 
 #include "AS5600.h"
 
@@ -44,7 +43,7 @@ uint16_t AS5600_getRawAngle(AS5600_t *enc) {
         i2c_read_blocking(enc->i2c, AS5600_DEFAULT_I2C_ADDR, rawAngle, 2, false);
 
         // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
-        combinedRawAngle = ((rawAngle[0] & 0x0F) << 8) | rawAngle[1];
+        uint16_t combinedRawAngle = ((rawAngle[0] & 0x0F) << 8) | rawAngle[1];
 
         return combinedRawAngle;
     }

@@ -1,7 +1,7 @@
+// TODO: Documentation
+
 #ifndef PID_H
 #define PID_H
-
-// TODO: Documentation
 
 typedef struct {
     float Kp;

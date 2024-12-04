@@ -1,7 +1,14 @@
+// TODO: Documentation
+
 #ifndef AS5600_H
 #define AS5600_H
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "pico/stdlib.h"
+#include "hardware/i2c.h"
 
 // Address
 const uint8_t AS5600_DEFAULT_I2C_ADDR   = 0x36;
@@ -27,6 +34,6 @@ void AS5600_init(AS5600_t *enc, i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direct
 
 bool AS5600_isConnected(AS5600_t *enc);
 
-float AS5600_getRawAngle(AS5600_t *enc);
+uint16_t AS5600_getRawAngle(AS5600_t *enc);
 
 #endif

@@ -1,5 +1,5 @@
-# Ignore all files in the software build directory
-software/src/build/
+# Ignore all files in software build directories
+software/pico/build/
 
 # Ignore compiled binaries
 *.o

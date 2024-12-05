@@ -10,6 +10,18 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
+typedef struct {
+    // Initialisation
+    bool initialised;
+
+    // Hardware
+    i2c_inst_t *i2c;
+    uint8_t DIR_PIN;
+
+    // Offset
+    uint16_t offset;
+} AS5600_t;
+
 // Address
 const uint8_t AS5600_DEFAULT_I2C_ADDR   = 0x36;
 

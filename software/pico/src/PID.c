@@ -1,12 +1,22 @@
 // TODO: Documentation
 
 // #include <stdio.h> // For debugging
+#include <stdlib.h>
 
 #include "PID.h"
 
-/* Initialize the PID controller */
-void PID_Init(volatile PID_t *pid, float Kp, float Ki, float Kd, float tau, float outLimMin,
+/** 
+ * @brief Initializes the PID controller 
+ * 
+ * @note PID struct is dynamically allocated and therefore must be freed after use.
+*/
+PID_t *PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
                 float outLimMax, float intLimMin, float intLimMax, float T) {
+    PID_t *pid = (PID_t *)malloc(sizeof(PID_t));
+    if (pid == NULL) {
+        return NULL;
+    }
+
     pid->Kp = Kp;
     pid->Ki = Ki;
     pid->Kd = Kd;
@@ -27,10 +37,12 @@ void PID_Init(volatile PID_t *pid, float Kp, float Ki, float Kd, float tau, floa
     pid->prevMeasurement = 0.0f;
 
     pid->output = 0.0f;
+
+    return pid;
 }
 
 /* Update the PID controller */
-float PID_Update(volatile PID_t *pid, float setpoint, float measurement) {
+float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
     // Error signal
     float error = setpoint - measurement;
     // printf("Error: %f\n", error);

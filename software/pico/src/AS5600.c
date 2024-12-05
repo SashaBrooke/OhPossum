@@ -14,18 +14,6 @@ const uint8_t AS5600_MAGNET_DETECTED   = 0x20;
 const uint8_t AS5600_MAGNET_TOO_WEAK   = 0x10;
 const uint8_t AS5600_MAGNET_TOO_STRONG = 0x08;
 
-typedef struct {
-    // Initialisation
-    bool initialised;
-
-    // Hardware
-    i2c_inst_t *i2c;
-    uint8_t DIR_PIN;
-
-    // Offset
-    uint16_t offset;
-} AS5600_t;
-
 /** @note Encoder struct is dynamically allocated and therefore must be freed after use */
 AS5600_t *AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
     AS5600_t *enc = (AS5600_t *)malloc(sizeof(AS5600_t));
@@ -42,11 +30,11 @@ AS5600_t *AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
     gpio_set_dir(DIR_PIN, GPIO_OUT);
     gpio_put(DIR_PIN, direction);
 
-    // If GPIO setup fails, free allocated memory and return NULL
-    if (gpio_is_valid(DIR_PIN) == false) {
-        free(enc);
-        return NULL;
-    }
+    // // If GPIO setup fails, free allocated memory and return NULL
+    // if (gpio_is_valid(DIR_PIN) == false) {
+    //     free(enc);
+    //     return NULL;
+    // }
 
     enc->initialised = true;
 

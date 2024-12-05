@@ -26,9 +26,9 @@ typedef struct {
     float output;
 } PID_t;
 
-void PID_Init(volatile PID_t *pid, float Kp, float Ki, float Kd, float tau, float outLimMin,
+PID_t *PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
                 float outLimMax, float intLimMin, float intLimMax, float T);
 
-float PID_Update(volatile PID_t *pid, float setpoint, float measurement);
+float PID_update(volatile PID_t *pid, float setpoint, float measurement);
 
 #endif

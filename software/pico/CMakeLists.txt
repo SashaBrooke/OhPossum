@@ -7,7 +7,8 @@ project(ohpossum-controls)
 pico_sdk_init()
 
 set(SOURCES
-    src/encoder.c
+    src/gimbal.c
+    src/AS5600.c
     src/PID.c
 )
 

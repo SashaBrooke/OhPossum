@@ -17,30 +17,46 @@
 
 typedef struct repeating_timer repeating_timer_t;
 
-typedef struct {
-    // Encoders
-    AS5600_t *panEncoder;
-    // AS5600_t *tiltEncoder;
+// Encoders
+volatile AS5600_t panEncoder;
+// volatile AS5600_t tiltEncoder;
 
-    // PID Controllers
-    PID_t *panPositionController;
-    // PID_t *tiltPositionController;
+// PID Controllers
+volatile PID_t panPositionController;
+// volatile PID_t tiltPositionController;
 
-    // PID_t *panRateController;
-    // PID_t *tiltRateController;
-} gimbal_t;
+// volatile PID_t panRateController;
+// volatile PID_t tiltRateController;
 
-volatile uint16_t panRawAngle = 0;
-volatile float panPidOutput = 0.0f;
+volatile uint16_t panPos = 0;
+volatile float panPid = 1.0f;
 volatile bool printFlag = false;
 
 bool updateMotors(repeating_timer_t *timer) {
-    volatile gimbal_t *gimbal = (gimbal_t *)timer->user_data;
-    uint16_t rawAngle = AS5600_getRawAngle(gimbal->panEncoder);
+    // Timing pin
+    gpio_put(TEST_PIN, 1);
+
+    // Read encoder
+    uint16_t panRawAngle = AS5600_getRawAngle(&panEncoder);
 
     // PID
+    float panPidOutput = PID_update(&panPositionController, 1000.0f, (float)panRawAngle);
 
     // Set volatile global variables and handle printFlag
+    panPos = panRawAngle;
+    panPid = panPidOutput;
+
+    static int counter = 0; 
+    counter++;
+    if (counter >= 100) {
+        printFlag = true;
+        counter = 0;
+    }
+
+    // Timing debug
+    gpio_put(TEST_PIN, 0);
+
+    return true;
 }
 
 int main() {
@@ -55,44 +71,35 @@ int main() {
     gpio_pull_up(PAN_I2C_SDA_PIN);
     gpio_pull_up(PAN_I2C_SCL_PIN);
 
-    volatile AS5600_t *panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_DIR_PIN, AS5600_CLOCK_WISE);
-    // volatile AS5600_t *tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
+    panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_DIR_PIN, AS5600_CLOCK_WISE);
+    // tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
 
-    volatile PID_t *panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
-    // volatile PID_t *tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
+    panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
+    // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
 
-    // volatile PID_t *panRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
-    // volatile PID_t *tiltRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
-
-    volatile gimbal_t gimbal = {panEncoder, panPositionController};
+    // panRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
+    // tiltRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
 
     gpio_init(TEST_PIN);
     gpio_set_dir(TEST_PIN, GPIO_OUT);
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
 
-    while (!AS5600_magnetGood(panEncoder)) {
+    while (!AS5600_magnetGood(&panEncoder)) {
+        printf("Magnet not right...\n");
         sleep_ms(1000);
     }
+    printf("Magnet good!\n");
 
+    printf("Starting timer\n");
     struct repeating_timer timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
-    add_repeating_timer_us(-1500, updateMotors, &gimbal, &timer);
+    add_repeating_timer_us(-1500, updateMotors, NULL, &timer);
 
     while(true) {
         if (printFlag) {
-            printf("Raw angle: [%u]\tPID Output: [%f]\n", panRawAngle, panPidOutput);
-            printFlag = false;  /**< Reset print flag */
+            printf("Raw angle: [%u]\tPID Output: [%f]\n", panPos, panPid);
+            // printFlag = false;  /**< Reset print flag */
         }
     }
-
-    // Free dynamically allocated variables
-    free(panEncoder);
-    // free(tiltEncoder);
-
-    free(panPositionController);
-    // free(tiltPositionController);
-
-    // free(panRateController);
-    // free(tiltRateController);
 
     return 0;
 }

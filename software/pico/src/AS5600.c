@@ -2,6 +2,17 @@
 
 #include "AS5600.h"
 
+// Address
+const uint8_t AS5600_DEFAULT_I2C_ADDR   = 0x36;
+
+//  Directions
+const uint8_t AS5600_CLOCK_WISE         = 0;  //  LOW
+const uint8_t AS5600_COUNTERCLOCK_WISE  = 1;  //  HIGH
+
+//  Conversions
+const float   AS5600_RAW_TO_DEGREES     = 360.0 / 4096;
+const float   AS5600_DEGREES_TO_RAW     = 4096 / 360.0;
+
 //  OUTPUT REGISTERS
 const uint8_t AS5600_RAW_ANGLE_REG     = 0x0C;  // + 0x0D
 
@@ -14,12 +25,9 @@ const uint8_t AS5600_MAGNET_DETECTED   = 0x20;
 const uint8_t AS5600_MAGNET_TOO_WEAK   = 0x10;
 const uint8_t AS5600_MAGNET_TOO_STRONG = 0x08;
 
-/** @note Encoder struct is dynamically allocated and therefore must be freed after use */
-AS5600_t *AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
-    AS5600_t *enc = (AS5600_t *)malloc(sizeof(AS5600_t));
-    if (enc == NULL) {
-        return NULL;
-    }
+AS5600_t AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
+    AS5600_t encoder;
+    AS5600_t *enc = &encoder;
 
     enc->i2c = i2c;
     enc->DIR_PIN = DIR_PIN;
@@ -30,18 +38,12 @@ AS5600_t *AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
     gpio_set_dir(DIR_PIN, GPIO_OUT);
     gpio_put(DIR_PIN, direction);
 
-    // // If GPIO setup fails, free allocated memory and return NULL
-    // if (gpio_is_valid(DIR_PIN) == false) {
-    //     free(enc);
-    //     return NULL;
-    // }
-
     enc->initialised = true;
 
-    return enc;
+    return encoder;
 }
 
-bool AS5600_isConnected(AS5600_t *enc) {
+bool AS5600_isConnected(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
     }
@@ -52,7 +54,7 @@ bool AS5600_isConnected(AS5600_t *enc) {
     return false;
 }
 
-uint8_t AS5600_readStatus(AS5600_t *enc) {
+uint8_t AS5600_readStatus(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;
     }
@@ -70,45 +72,57 @@ uint8_t AS5600_readStatus(AS5600_t *enc) {
     return 0;
 }
 
-bool AS5600_magnetDetected(AS5600_t *enc) {
+bool AS5600_magnetDetected(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
     }
-    uint8_t status = AS5600_readStatus(enc);
-    uint8_t md = (status & AS5600_MAGNET_DETECTED) >> 5;  /**< Magnet Detected (bit 5) */
-    return (md == 1);
+    if (enc->initialised) {
+        uint8_t status = AS5600_readStatus(enc);
+        uint8_t md = (status & AS5600_MAGNET_DETECTED) >> 5;  /**< Magnet Detected (bit 5) */
+        return (md == 1);
+    }
+    return false;
 }
 
-bool AS5600_magnetTooWeak(AS5600_t *enc) {
+bool AS5600_magnetTooWeak(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
     }
-    uint8_t status = AS5600_readStatus(enc);
-    uint8_t ml = (status & AS5600_MAGNET_TOO_WEAK) >> 4;  /**< Magnet Too Weak (bit 4) */
-    return (ml == 1);
+    if (enc->initialised) {
+        uint8_t status = AS5600_readStatus(enc);
+        uint8_t ml = (status & AS5600_MAGNET_TOO_WEAK) >> 4;  /**< Magnet Too Weak (bit 4) */
+        return (ml == 1);
+    }
+    return false;
 }
 
-bool AS5600_magnetTooStrong(AS5600_t *enc) {
+bool AS5600_magnetTooStrong(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
     }
-    uint8_t status = AS5600_readStatus(enc);
-    uint8_t mh = (status & AS5600_MAGNET_TOO_STRONG) >> 3;  /**< Magnet Too Strong (bit 3) */
-    return (mh == 1);
+    if (enc->initialised) {
+        uint8_t status = AS5600_readStatus(enc);
+        uint8_t mh = (status & AS5600_MAGNET_TOO_STRONG) >> 3;  /**< Magnet Too Strong (bit 3) */
+        return (mh == 1);
+    }
+    return false;
 }
 
-bool AS5600_magnetGood(AS5600_t *enc) {
+bool AS5600_magnetGood(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
     }
-    uint8_t status = AS5600_readStatus(enc);
-    uint8_t md = (status & 0x20) >> 5;  /**< Magnet Detected (bit 5) */
-    uint8_t ml = (status & 0x10) >> 4;  /**< Magnet Too Weak (bit 4) */
-    uint8_t mh = (status & 0x08) >> 3;  /**< Magnet Too Strong (bit 3) */
-    return (md == 1) && (ml == 0) && (mh == 0);
+    if (enc->initialised) {
+        uint8_t status = AS5600_readStatus(enc);
+        uint8_t md = (status & 0x20) >> 5;  /**< Magnet Detected (bit 5) */
+        uint8_t ml = (status & 0x10) >> 4;  /**< Magnet Too Weak (bit 4) */
+        uint8_t mh = (status & 0x08) >> 3;  /**< Magnet Too Strong (bit 3) */
+        return (md == 1) && (ml == 0) && (mh == 0);
+    }
+    return false;
 }
 
-uint8_t AS5600_readAGC(AS5600_t *enc) {
+uint8_t AS5600_readAGC(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;
     }
@@ -126,16 +140,16 @@ uint8_t AS5600_readAGC(AS5600_t *enc) {
     return 0;
 }
 
-uint16_t AS5600_getRawAngle(AS5600_t *enc) {
+uint16_t AS5600_getRawAngle(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;
     }
     if (enc->initialised) {
-        uint8_t rawAngleReg = AS5600_RAW_ANGLE_REG;
+        uint8_t rawAngleReg = 0x0C;
         uint8_t rawAngle[2];
 
-        i2c_write_blocking(enc->i2c, AS5600_DEFAULT_I2C_ADDR, &rawAngleReg, 1, true);
-        i2c_read_blocking(enc->i2c, AS5600_DEFAULT_I2C_ADDR, rawAngle, 2, false);
+        i2c_write_blocking(i2c0, 0x36, &rawAngleReg, 1, true);
+        i2c_read_blocking(i2c0, 0x36, rawAngle, 2, false);
 
         // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
         uint16_t combinedRawAngle = ((rawAngle[0] & 0x0F) << 8) | rawAngle[1];

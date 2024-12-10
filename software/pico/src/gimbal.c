@@ -1,19 +1,25 @@
 #include <stdio.h>
 
+#include "hardware/pwm.h"
+
 #include "PID.h"
 #include "AS5600.h"
 
 #define PAN_I2C_PORT i2c0
-#define PAN_DIR_PIN 3
 #define PAN_I2C_SDA_PIN 4
 #define PAN_I2C_SCL_PIN 5
+#define PAN_DIR_PIN 3
+#define PAN_PWM_PIN 6
 
 // #define TILT_I2C_PORT i2c1
-// #define TILT_DIR_PIN XXX
-// #define TILT_I2C_SDA_PIN XXX
-// #define TILT_I2C_SCL_PIN XXX
+// #define TILT_I2C_SDA_PIN 10
+// #define TILT_I2C_SCL_PIN 11
+// #define TILT_DIR_PIN 16
+// #define PAN_PWM_PIN 7
 
 #define TEST_PIN 0
+
+#define PWM_TOP_REG 1000
 
 typedef struct repeating_timer repeating_timer_t;
 
@@ -25,22 +31,30 @@ volatile AS5600_t panEncoder;
 volatile PID_t panPositionController;
 // volatile PID_t tiltPositionController;
 
-// volatile PID_t panRateController;
-// volatile PID_t tiltRateController;
-
+// Variables
 volatile uint16_t panPos = 0;
 volatile float panPid = 1.0f;
 volatile bool printFlag = false;
 
 bool updateMotors(repeating_timer_t *timer) {
-    // Timing pin
+    // Timing debug
     gpio_put(TEST_PIN, 1);
 
-    // Read encoder
+    // Pan
     uint16_t panRawAngle = AS5600_getRawAngle(&panEncoder);
-
-    // PID
     float panPidOutput = PID_update(&panPositionController, 1000.0f, (float)panRawAngle);
+    float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
+    uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
+    gpio_put(PAN_DIR_PIN, panDirection);
+    pwm_set_gpio_level(PAN_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
+
+    // Tilt
+    // uint16_t tiltRawAngle = AS5600_getRawAngle(&tiltEncoder);
+    // float tiltPidOutput = PID_update(&tiltPositionController, 1000.0f, (float)tiltRawAngle);
+    // float tiltPwmDutyCycle = PID_normaliseOutput(&tiltPositionController, -100.0f, 100.0f);
+    // uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
+    // gpio_put(TILT_DIR_PIN, tiltDirection);
+    // pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
 
     // Set volatile global variables and handle printFlag
     panPos = panRawAngle;
@@ -77,8 +91,16 @@ int main() {
     panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
     // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
 
-    // panRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
-    // tiltRateController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
+    gpio_set_function(PAN_PWM_PIN, GPIO_FUNC_PWM);
+    // gpio_set_function(TILT_PWM_PIN, GPIO_FUNC_PWM);
+
+    unsigned int pwmSliceNum = pwm_gpio_to_slice_num(PAN_PWM_PIN); // Pan and tilt PWM pins are on the same slice
+    pwm_config configPWM = pwm_get_default_config();
+    pwm_config_set_clkdiv(&configPWM, 125.f);
+    pwm_init(pwmSliceNum, &configPWM, true);
+
+    pwm_set_gpio_level(PAN_PWM_PIN, 0);    /**< Explicitly set to 0 duty cycle initially */
+    // pwm_set_gpio_level(TILT_PWM_PIN, 0);   /**< Explicitly set to 0 duty cycle initially */
 
     gpio_init(TEST_PIN);
     gpio_set_dir(TEST_PIN, GPIO_OUT);

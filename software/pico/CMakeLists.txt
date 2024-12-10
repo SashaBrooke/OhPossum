@@ -22,6 +22,7 @@ add_executable(ohpossum-controls
 target_link_libraries(ohpossum-controls
     pico_stdlib
     hardware_i2c
+    hardware_pwm
 )
 
 target_include_directories(ohpossum-controls 

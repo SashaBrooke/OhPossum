@@ -1,6 +1,6 @@
 // TODO: Documentation
 
-#include "AS5600.h"
+#include "as5600.h"
 
 // Address
 const uint8_t AS5600_DEFAULT_I2C_ADDR   = 0x36;

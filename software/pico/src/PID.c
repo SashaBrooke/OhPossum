@@ -3,7 +3,7 @@
 // #include <stdio.h> // For debugging
 #include <stdlib.h>
 
-#include "PID.h"
+#include "pid.h"
 
 PID_t PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
                 float outLimMax, float intLimMin, float intLimMax, float T) {

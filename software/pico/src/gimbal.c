@@ -2,8 +2,8 @@
 
 #include "hardware/pwm.h"
 
-#include "PID.h"
-#include "AS5600.h"
+#include "pid.h"
+#include "as5600.h"
 
 #define PAN_I2C_PORT i2c0
 #define PAN_I2C_SDA_PIN 4

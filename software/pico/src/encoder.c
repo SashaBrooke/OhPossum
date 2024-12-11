@@ -17,7 +17,7 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
-#include "PID.h"
+#include "pid.h"
 
 #define I2C_PORT i2c0
 #define DIR_PIN 3

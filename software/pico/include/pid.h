@@ -24,10 +24,13 @@ typedef struct {
     float prevMeasurement;
 
     float output;
+
+    float maxMeasurement;
 } PID_t;
 
 PID_t PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
-                float outLimMax, float intLimMin, float intLimMax, float T);
+                float outLimMax, float intLimMin, float intLimMax, 
+                float T, float maxMeasurement);
 
 float PID_update(volatile PID_t *pid, float setpoint, float measurement);
 

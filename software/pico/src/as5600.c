@@ -3,27 +3,30 @@
 #include "as5600.h"
 
 // Address
-const uint8_t AS5600_DEFAULT_I2C_ADDR   = 0x36;
+const uint8_t  AS5600_DEFAULT_I2C_ADDR     = 0x36;
 
 //  Directions
-const uint8_t AS5600_CLOCK_WISE         = 0;  //  LOW
-const uint8_t AS5600_COUNTERCLOCK_WISE  = 1;  //  HIGH
+const uint8_t  AS5600_CLOCK_WISE           = 0;  //  LOW
+const uint8_t  AS5600_COUNTERCLOCK_WISE    = 1;  //  HIGH
 
 //  Conversions
-const float   AS5600_RAW_TO_DEGREES     = 360.0 / 4096;
-const float   AS5600_DEGREES_TO_RAW     = 4096 / 360.0;
+const float    AS5600_RAW_TO_DEGREES       = 360.0 / 4096;
+const float    AS5600_DEGREES_TO_RAW       = 4096 / 360.0;
+
+//  Resolution
+const uint16_t AS5600_RAW_ANGLE_RESOLUTION = 4095;
 
 //  OUTPUT REGISTERS
-const uint8_t AS5600_RAW_ANGLE_REG     = 0x0C;  // + 0x0D
+const uint8_t  AS5600_RAW_ANGLE_REG        = 0x0C;  // + 0x0D
 
 //  STATUS REGISTERS
-const uint8_t AS5600_STATUS_REG        = 0x0B;
-const uint8_t AS5600_AGC_REG           = 0x1A;
+const uint8_t  AS5600_STATUS_REG           = 0x0B;
+const uint8_t  AS5600_AGC_REG              = 0x1A;
 
 //  STATUS BITS
-const uint8_t AS5600_MAGNET_DETECTED   = 0x20;
-const uint8_t AS5600_MAGNET_TOO_WEAK   = 0x10;
-const uint8_t AS5600_MAGNET_TOO_STRONG = 0x08;
+const uint8_t  AS5600_MAGNET_DETECTED      = 0x20;
+const uint8_t  AS5600_MAGNET_TOO_WEAK      = 0x10;
+const uint8_t  AS5600_MAGNET_TOO_STRONG    = 0x08;
 
 AS5600_t AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
     AS5600_t encoder;

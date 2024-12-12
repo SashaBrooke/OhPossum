@@ -1,26 +1,38 @@
 #include <stdio.h>
+// -----------------
+#include <string.h>
+// -----------------
 
 #include "hardware/pwm.h"
 
 #include "pid.h"
 #include "as5600.h"
 
-#define PAN_I2C_PORT i2c0
-#define PAN_I2C_SDA_PIN 4
-#define PAN_I2C_SCL_PIN 5
-#define PAN_ENC_DIR_PIN 3
-#define PAN_PWM_PIN 6
-#define PAN_MOTOR_DIR_PIN 8
+#define PAN_I2C_PORT        i2c0
+#define PAN_I2C_SDA_PIN     4
+#define PAN_I2C_SCL_PIN     5
+#define PAN_ENC_DIR_PIN     3
+#define PAN_PWM_PIN         6
+#define PAN_MOTOR_DIR_PIN   8
 
-// #define TILT_I2C_PORT i2c1
-// #define TILT_I2C_SDA_PIN 10
-// #define TILT_I2C_SCL_PIN 11
-// #define TILT_DIR_PIN 16
-// #define PAN_PWM_PIN 7
+// #define TILT_I2C_PORT       i2c1
+// #define TILT_I2C_SDA_PIN    10
+// #define TILT_I2C_SCL_PIN    11
+// #define TILT_ENC_DIR_PIN    12
+// #define TILT_PWM_PIN        7
+// #define TILT_MOTOR_DIR_PIN  9
 
 #define TEST_PIN 0
 
 #define PWM_TOP_REG 100
+
+#define CONTROLS_FREQ 1000
+
+// Serial input
+#define LF          10
+#define CR          13
+#define NO_VAL      254
+#define ENDSTDIN    255
 
 typedef struct repeating_timer repeating_timer_t;
 
@@ -65,7 +77,7 @@ bool updateMotors(repeating_timer_t *timer) {
 
     static int counter = 0; 
     counter++;
-    if (counter >= 100) {
+    if (counter >= 5) {
         printFlag = true;
         counter = 0;
     }
@@ -91,8 +103,18 @@ int main() {
     panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_ENC_DIR_PIN, AS5600_CLOCK_WISE);
     // tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
 
-    panPositionController = PID_setup(0.3f, 0.0f, 0.0f, 0.0f, -100.0f, 100.0f, -0.5f, 0.5f, 0.0015f);
-    // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 0.0f, -1000.0f, 1000.0f, 0.0f, 0.0f, 0.0015f);
+    panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
+                                      0.0f, 
+                                      -100.0f, 100.0f, 
+                                      0.0f, 0.0f, 
+                                      (float)(1 / CONTROLS_FREQ), 
+                                      (float)AS5600_RAW_ANGLE_RESOLUTION);
+    // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
+    //                                   0.0f, 
+    //                                   -100.0f, 100.0f, 
+    //                                   0.0f, 0.0f, 
+    //                                   (float)(1 / CONTROLS_FREQ), 
+    //                                   (float)AS5600_RAW_ANGLE_RESOLUTION);
 
     gpio_set_function(PAN_PWM_PIN, GPIO_FUNC_PWM);
     // gpio_set_function(TILT_PWM_PIN, GPIO_FUNC_PWM);
@@ -115,21 +137,60 @@ int main() {
     gpio_set_dir(TEST_PIN, GPIO_OUT);
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
 
-    while (!AS5600_magnetGood(&panEncoder)) {
-        printf("Magnet not right...\n");
-        sleep_ms(1000);
-    }
-    printf("Magnet good!\n");
+    // // Magnet debugging
+    // while (!AS5600_magnetGood(&panEncoder)) {
+    //     printf("Magnet not right...\n");
+    //     sleep_ms(1000);
+    // }
+    // printf("Magnet good!\n");
 
     printf("Starting timer\n");
     struct repeating_timer timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
-    add_repeating_timer_us(-1500, updateMotors, NULL, &timer);
+    add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
+
+    // ------------------------------------------------
+    char strg[100];
+    char chr;
+    int lp = 0;
+
+    memset(strg, 0, sizeof(strg));
+    // ------------------------------------------------
 
     while(true) {
         if (printFlag) {
-            printf("Raw angle: [%u]\tPID Output: [%f]\tDirection: [%u]\n", panPos, panPid, dir);
+            printf("%u,%f,%u\n", panPos, panPid, dir);
             printFlag = false;  /**< Reset print flag */
         }
+
+        // ------------------------------------------------
+        chr = getchar_timeout_us(0);
+
+        // Skip if nothing to read (invalid) or error occurred
+        if (chr == NO_VAL || chr == ENDSTDIN) {
+            continue;
+        }
+
+        // Only process valid ASCII characters, CR, or LF
+        if ((chr >= 32 && chr <= 126) || chr == CR || chr == LF) {
+            strg[lp++] = chr;
+        }
+
+        bool endOfInput = (chr == CR && (getchar_timeout_us(0) == LF)) || 
+                          (chr == CR) || 
+                          (chr == LF);
+
+        bool bufferFull = (lp == (sizeof(strg) - 1));
+
+        // Terminate string on CR, LF, or CRLF or buffer full
+        if (endOfInput || bufferFull) {
+            strg[lp] = 0;  // Null-terminate
+            if (strlen(strg) > 0) {
+                printf("You wrote - %s\n", strg);
+            }
+            memset(strg, 0, sizeof(strg));  // Clear the buffer
+            lp = 0;  // Reset pointer
+        }
+        // ------------------------------------------------
     }
 
     return 0;

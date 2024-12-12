@@ -12,15 +12,18 @@
 #include "hardware/i2c.h"
 
 // Address
-extern const uint8_t AS5600_DEFAULT_I2C_ADDR;
+extern const uint8_t   AS5600_DEFAULT_I2C_ADDR;
 
 //  Directions
-extern const uint8_t AS5600_CLOCK_WISE;
-extern const uint8_t AS5600_COUNTERCLOCK_WISE;
+extern const uint8_t   AS5600_CLOCK_WISE;
+extern const uint8_t   AS5600_COUNTERCLOCK_WISE;
 
 //  Conversions
-extern const float   AS5600_RAW_TO_DEGREES;
-extern const float   AS5600_DEGREES_TO_RAW;
+extern const float     AS5600_RAW_TO_DEGREES;
+extern const float     AS5600_DEGREES_TO_RAW;
+
+//  Resolution
+extern const uint16_t  AS5600_RAW_ANGLE_RESOLUTION;
 
 typedef struct {
     // Initialisation

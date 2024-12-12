@@ -8,8 +8,8 @@ pico_sdk_init()
 
 set(SOURCES
     src/gimbal.c
-    src/AS5600.c
-    src/PID.c
+    src/as5600.c
+    src/pid.c
 )
 
 # Optional: Automatically collect all .c files in the src/ directory

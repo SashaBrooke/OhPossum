@@ -2,11 +2,13 @@
 
 // #include <stdio.h> // For debugging
 #include <stdlib.h>
+#include <math.h>
 
 #include "pid.h"
 
-PID_t PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
-                float outLimMax, float intLimMin, float intLimMax, float T) {
+PID_t PID_setup(float Kp, float Ki, float Kd, float tau, 
+                float outLimMin, float outLimMax, float intLimMin, 
+                float intLimMax, float T, float maxMeasurement) {
     PID_t controller;
     PID_t *pid = &controller;
 
@@ -31,13 +33,16 @@ PID_t PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
 
     pid->output = 0.0f;
 
+    pid->maxMeasurement;
+
     return controller;
 }
 
 /* Update the PID controller */
 float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
     // Error signal
-    float error = setpoint - measurement;
+    float error = fmod((setpoint - measurement + (pid->maxMeasurement / 2)), pid->maxMeasurement) 
+              - (pid->maxMeasurement / 2);
     // printf("Error: %f\n", error);
 
     // Proportional term

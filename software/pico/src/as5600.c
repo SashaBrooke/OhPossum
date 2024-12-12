@@ -1,5 +1,11 @@
 // TODO: Documentation
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pico/stdlib.h"
+#include "hardware/i2c.h"
+
 #include "as5600.h"
 
 // Address

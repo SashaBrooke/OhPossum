@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 // -----------------
 #include <string.h>
 // -----------------
 
+#include "pico/stdlib.h" 
 #include "hardware/pwm.h"
+#include "hardware/i2c.h"
 
 #include "pid.h"
 #include "as5600.h"

@@ -3,12 +3,9 @@
 #ifndef AS5600_H
 #define AS5600_H
 
-#include <stdio.h> //
-#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
 // Address

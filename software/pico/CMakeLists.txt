@@ -10,6 +10,7 @@ set(SOURCES
     src/gimbal.c
     src/as5600.c
     src/pid.c
+    src/command_input.c
 )
 
 # Optional: Automatically collect all .c files in the src/ directory

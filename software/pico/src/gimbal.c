@@ -1,9 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-// -----------------
-#include <string.h>
-// -----------------
 
 #include "pico/stdlib.h" 
 #include "hardware/pwm.h"
@@ -11,6 +9,7 @@
 
 #include "pid.h"
 #include "as5600.h"
+#include "command_input.h"
 
 #define PAN_I2C_PORT        i2c0
 #define PAN_I2C_SDA_PIN     4
@@ -51,8 +50,13 @@ volatile PID_t panPositionController;
 // Variables
 volatile uint16_t panPos = 0;
 volatile float panPid = 1.0f;
+volatile uint8_t panDir = 0;
+
+// volatile uint16_t tiltPos = 0;
+// volatile float tiltPid = 1.0f;
+// volatile uint8_t tiltDir = 0;
+
 volatile bool printFlag = false;
-volatile uint8_t dir = 0;
 
 bool updateMotors(repeating_timer_t *timer) {
     // Timing debug
@@ -63,7 +67,6 @@ bool updateMotors(repeating_timer_t *timer) {
     float panPidOutput = PID_update(&panPositionController, 1000.0f, (float)panRawAngle);
     // float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
     uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
-    dir = panDirection;
     gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
     pwm_set_gpio_level(PAN_PWM_PIN, (uint16_t)(abs(panPidOutput)));
 
@@ -72,13 +75,19 @@ bool updateMotors(repeating_timer_t *timer) {
     // float tiltPidOutput = PID_update(&tiltPositionController, 1000.0f, (float)tiltRawAngle);
     // float tiltPwmDutyCycle = PID_normaliseOutput(&tiltPositionController, -100.0f, 100.0f);
     // uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
-    // gpio_put(TILT_DIR_PIN, tiltDirection);
+    // gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
     // pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
 
     // Set volatile global variables and handle printFlag
     panPos = panRawAngle;
     panPid = panPidOutput;
+    panDir = panDirection;
 
+    // tiltPos = tiltRawAngle;
+    // tiltPid = tiltPidOutput;
+    // tiltDir = tiltDirection;
+
+    // Handle print flag toggling
     static int counter = 0; 
     counter++;
     if (counter >= 5) {
@@ -103,6 +112,12 @@ int main() {
     gpio_set_function(PAN_I2C_SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(PAN_I2C_SDA_PIN);
     gpio_pull_up(PAN_I2C_SCL_PIN);
+
+    // i2c_init(TILT_I2C_PORT, 400000);
+    // gpio_set_function(TILT_I2C_SDA_PIN, GPIO_FUNC_I2C);
+    // gpio_set_function(TILT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+    // gpio_pull_up(TILT_I2C_SDA_PIN);
+    // gpio_pull_up(TILT_I2C_SCL_PIN);
 
     panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_ENC_DIR_PIN, AS5600_CLOCK_WISE);
     // tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
@@ -137,6 +152,10 @@ int main() {
     gpio_set_dir(PAN_MOTOR_DIR_PIN, GPIO_OUT);
     gpio_put(PAN_MOTOR_DIR_PIN, 0);  /**< Default LOW, just be explicit */
 
+    // gpio_init(TILT_MOTOR_DIR_PIN);
+    // gpio_set_dir(TILT_MOTOR_DIR_PIN, GPIO_OUT);
+    // gpio_put(TILT_MOTOR_DIR_PIN, 0);  /**< Default LOW, just be explicit */
+
     gpio_init(TEST_PIN);
     gpio_set_dir(TEST_PIN, GPIO_OUT);
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
@@ -152,49 +171,20 @@ int main() {
     struct repeating_timer timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
     add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
 
-    // ------------------------------------------------
-    char strg[100];
-    char chr;
-    int lp = 0;
-
-    memset(strg, 0, sizeof(strg));
-    // ------------------------------------------------
+    // Enable serial commands
+    initSerialCommandInput();
+    char* command;
 
     while(true) {
         if (printFlag) {
-            printf("%u,%f,%u\n", panPos, panPid, dir);
+            printf("%u,%f,%u\n", panPos, panPid, panDir);
             printFlag = false;  /**< Reset print flag */
         }
 
-        // ------------------------------------------------
-        chr = getchar_timeout_us(0);
-
-        // Skip if nothing to read (invalid) or error occurred
-        if (chr == NO_VAL || chr == ENDSTDIN) {
-            continue;
+        command = readSerialCommand_nonBlocking();
+        if (command != NULL) {
+            // Handle command (agrument parser)
         }
-
-        // Only process valid ASCII characters, CR, or LF
-        if ((chr >= 32 && chr <= 126) || chr == CR || chr == LF) {
-            strg[lp++] = chr;
-        }
-
-        bool endOfInput = (chr == CR && (getchar_timeout_us(0) == LF)) || 
-                          (chr == CR) || 
-                          (chr == LF);
-
-        bool bufferFull = (lp == (sizeof(strg) - 1));
-
-        // Terminate string on CR, LF, or CRLF or buffer full
-        if (endOfInput || bufferFull) {
-            strg[lp] = 0;  // Null-terminate
-            if (strlen(strg) > 0) {
-                printf("You wrote - %s\n", strg);
-            }
-            memset(strg, 0, sizeof(strg));  // Clear the buffer
-            lp = 0;  // Reset pointer
-        }
-        // ------------------------------------------------
     }
 
     return 0;

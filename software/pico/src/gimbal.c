@@ -64,7 +64,7 @@ bool updateMotors(repeating_timer_t *timer) {
 
     // Pan
     uint16_t panRawAngle = AS5600_getRawAngle(&panEncoder);
-    float panPidOutput = PID_update(&panPositionController, 1000.0f, (float)panRawAngle);
+    float panPidOutput = PID_update(&panPositionController, 4000.0f, (float)panRawAngle);
     // float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
     uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
     gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
@@ -126,13 +126,13 @@ int main() {
                                       0.0f, 
                                       -100.0f, 100.0f, 
                                       0.0f, 0.0f, 
-                                      (float)(1 / CONTROLS_FREQ), 
+                                      (1.0f / CONTROLS_FREQ), 
                                       (float)AS5600_RAW_ANGLE_RESOLUTION);
     // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
     //                                   0.0f, 
     //                                   -100.0f, 100.0f, 
     //                                   0.0f, 0.0f, 
-    //                                   (float)(1 / CONTROLS_FREQ), 
+    //                                   (1.0f / CONTROLS_FREQ), 
     //                                   (float)AS5600_RAW_ANGLE_RESOLUTION);
 
     gpio_set_function(PAN_PWM_PIN, GPIO_FUNC_PWM);

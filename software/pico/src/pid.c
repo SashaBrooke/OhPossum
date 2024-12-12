@@ -3,6 +3,7 @@
 // #include <stdio.h> // For debugging
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "pid.h"
 
@@ -33,7 +34,7 @@ PID_t PID_setup(float Kp, float Ki, float Kd, float tau,
 
     pid->output = 0.0f;
 
-    pid->maxMeasurement;
+    pid->maxMeasurement = maxMeasurement;
 
     return controller;
 }
@@ -41,9 +42,13 @@ PID_t PID_setup(float Kp, float Ki, float Kd, float tau,
 /* Update the PID controller */
 float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
     // Error signal
-    float error = fmod((setpoint - measurement + (pid->maxMeasurement / 2)), pid->maxMeasurement) 
-              - (pid->maxMeasurement / 2);
-    // printf("Error: %f\n", error);
+    float error = setpoint - measurement;
+
+    if (error > pid->maxMeasurement / 2) {
+        error -= pid->maxMeasurement;
+    } else if (error < -(pid->maxMeasurement / 2)) {
+        error += pid->maxMeasurement;
+    }
 
     // Proportional term
     float proportional = pid->Kp * error;

@@ -24,6 +24,7 @@ target_link_libraries(ohpossum-controls
     pico_stdlib
     hardware_i2c
     hardware_pwm
+    hardware_sync
 )
 
 target_include_directories(ohpossum-controls 

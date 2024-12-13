@@ -6,6 +6,7 @@
 #include "pico/stdlib.h" 
 #include "hardware/pwm.h"
 #include "hardware/i2c.h"
+#include "hardware/sync.h" 
 
 #include "pid.h"
 #include "as5600.h"
@@ -184,6 +185,15 @@ int main() {
         command = readSerialCommand_nonBlocking();
         if (command != NULL) {
             // Handle command (agrument parser)
+            cancel_repeating_timer(&timer);
+            printf("Tunring interrupts off\n");
+            uint32_t interrupts = save_and_disable_interrupts();
+            for (int i = 0; i < 100000000; i++) {
+                //
+            }
+            restore_interrupts(interrupts);
+            printf("Tunring interrupts back on\n");
+            add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
         }
     }
 

@@ -32,12 +32,6 @@
 
 #define CONTROLS_FREQ 1000
 
-// Serial input
-#define LF          10
-#define CR          13
-#define NO_VAL      254
-#define ENDSTDIN    255
-
 typedef struct repeating_timer repeating_timer_t;
 
 typedef enum {
@@ -45,15 +39,17 @@ typedef enum {
     GIMBAL_MODE_ARMED
 } gimbal_mode_t;
 
-gimbal_mode_t gimbalMode;
+typedef struct {
+    gimbal_mode_t gimbalMode;
 
-// Encoders
-volatile AS5600_t panEncoder;
-// volatile AS5600_t tiltEncoder;
+    // Encoders
+    volatile AS5600_t panEncoder;
+    // volatile AS5600_t tiltEncoder;
 
-// PID Controllers
-volatile PID_t panPositionController;
-// volatile PID_t tiltPositionController;
+    // PID Controllers
+    volatile PID_t panPositionController;
+    // volatile PID_t tiltPositionController;
+} gimbal_configuration_t;
 
 // Variables
 volatile uint16_t panPos = 0;
@@ -70,13 +66,15 @@ bool updateMotors(repeating_timer_t *timer) {
     // Timing debug
     gpio_put(TEST_PIN, 1);
 
+    gimbal_configuration_t *gc = (gimbal_configuration_t *)timer->user_data;
+
     // Pan
-    uint16_t panRawAngle = AS5600_getRawAngle(&panEncoder);
+    uint16_t panRawAngle = AS5600_getRawAngle(&(gc->panEncoder));
     panPos = panRawAngle;
 
-    if (gimbalMode == GIMBAL_MODE_ARMED) {
-        float panPidOutput = PID_update(&panPositionController, 4000.0f, (float)panRawAngle);
-        // float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
+    if (gc->gimbalMode == GIMBAL_MODE_ARMED) {
+        float panPidOutput = PID_update(&(gc->panPositionController), 4000.0f, (float)panRawAngle);
+        // float panPwmDutyCycle = PID_normaliseOutput(&(gc->panPositionController), -100.0f, 100.0f);
         uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
         gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
         pwm_set_gpio_level(PAN_PWM_PIN, (uint16_t)(abs(panPidOutput)));
@@ -86,12 +84,12 @@ bool updateMotors(repeating_timer_t *timer) {
     }
 
     // Tilt
-    // uint16_t tiltRawAngle = AS5600_getRawAngle(&tiltEncoder);
+    // uint16_t tiltRawAngle = AS5600_getRawAngle(&(gc->tiltEncoder));
     // tiltPos = tiltRawAngle;
 
-    // if (gimbalMode == GIMBAL_MODE_ARMED) {
-    //     float tiltPidOutput = PID_update(&tiltPositionController, 1000.0f, (float)tiltRawAngle);
-    //     float tiltPwmDutyCycle = PID_normaliseOutput(&tiltPositionController, -100.0f, 100.0f);
+    // if (gc->gimbalMode == GIMBAL_MODE_ARMED) {
+    //     float tiltPidOutput = PID_update(&(gc->tiltPositionController), 1000.0f, (float)tiltRawAngle);
+    //     float tiltPwmDutyCycle = PID_normaliseOutput(&(gc->tiltPositionController), -100.0f, 100.0f);
     //     uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
     //     gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
     //     pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
@@ -119,7 +117,9 @@ int main() {
 
     sleep_ms(10000); // Allow time to open serial monitor
 
-    gimbalMode = GIMBAL_MODE_FREE;
+    gimbal_configuration_t gimbalConfig;
+
+    gimbalConfig.gimbalMode = GIMBAL_MODE_FREE; // On powerup gimbal should be in free mode
 
     // Configure I2C Communication
     i2c_init(PAN_I2C_PORT, 400000);
@@ -134,21 +134,21 @@ int main() {
     // gpio_pull_up(TILT_I2C_SDA_PIN);
     // gpio_pull_up(TILT_I2C_SCL_PIN);
 
-    panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_ENC_DIR_PIN, AS5600_CLOCK_WISE);
-    // tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
+    gimbalConfig.panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_ENC_DIR_PIN, AS5600_CLOCK_WISE);
+    // gimbalConfig.tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
 
-    panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
-                                      0.0f, 
-                                      -100.0f, 100.0f, 
-                                      0.0f, 0.0f, 
-                                      (1.0f / CONTROLS_FREQ), 
-                                      (float)AS5600_RAW_ANGLE_RESOLUTION);
-    // tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
-    //                                   0.0f, 
-    //                                   -100.0f, 100.0f, 
-    //                                   0.0f, 0.0f, 
-    //                                   (1.0f / CONTROLS_FREQ), 
-    //                                   (float)AS5600_RAW_ANGLE_RESOLUTION);
+    gimbalConfig.panPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
+                                                   0.0f, 
+                                                   -100.0f, 100.0f, 
+                                                   0.0f, 0.0f, 
+                                                   (1.0f / CONTROLS_FREQ), 
+                                                   (float)AS5600_RAW_ANGLE_RESOLUTION);
+    // gimbalConfig.tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
+    //                                                 0.0f, 
+    //                                                 -100.0f, 100.0f, 
+    //                                                 0.0f, 0.0f, 
+    //                                                 (1.0f / CONTROLS_FREQ), 
+    //                                                 (float)AS5600_RAW_ANGLE_RESOLUTION);
 
     gpio_set_function(PAN_PWM_PIN, GPIO_FUNC_PWM);
     // gpio_set_function(TILT_PWM_PIN, GPIO_FUNC_PWM);
@@ -184,7 +184,7 @@ int main() {
 
     printf("Starting timer\n");
     struct repeating_timer timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
-    add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
+    add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, &gimbalConfig, &timer);
 
     // Enable serial commands
     initSerialCommandInput();

@@ -40,6 +40,13 @@
 
 typedef struct repeating_timer repeating_timer_t;
 
+typedef enum {
+    GIMBAL_MODE_FREE,
+    GIMBAL_MODE_ARMED
+} gimbal_mode_t;
+
+gimbal_mode_t gimbalMode;
+
 // Encoders
 volatile AS5600_t panEncoder;
 // volatile AS5600_t tiltEncoder;
@@ -65,28 +72,33 @@ bool updateMotors(repeating_timer_t *timer) {
 
     // Pan
     uint16_t panRawAngle = AS5600_getRawAngle(&panEncoder);
-    float panPidOutput = PID_update(&panPositionController, 4000.0f, (float)panRawAngle);
-    // float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
-    uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
-    gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
-    pwm_set_gpio_level(PAN_PWM_PIN, (uint16_t)(abs(panPidOutput)));
+    panPos = panRawAngle;
+
+    if (gimbalMode == GIMBAL_MODE_ARMED) {
+        float panPidOutput = PID_update(&panPositionController, 4000.0f, (float)panRawAngle);
+        // float panPwmDutyCycle = PID_normaliseOutput(&panPositionController, -100.0f, 100.0f);
+        uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
+        gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
+        pwm_set_gpio_level(PAN_PWM_PIN, (uint16_t)(abs(panPidOutput)));
+
+        panPid = panPidOutput;
+        panDir = panDirection;
+    }
 
     // Tilt
     // uint16_t tiltRawAngle = AS5600_getRawAngle(&tiltEncoder);
-    // float tiltPidOutput = PID_update(&tiltPositionController, 1000.0f, (float)tiltRawAngle);
-    // float tiltPwmDutyCycle = PID_normaliseOutput(&tiltPositionController, -100.0f, 100.0f);
-    // uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
-    // gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
-    // pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
-
-    // Set volatile global variables and handle printFlag
-    panPos = panRawAngle;
-    panPid = panPidOutput;
-    panDir = panDirection;
-
     // tiltPos = tiltRawAngle;
-    // tiltPid = tiltPidOutput;
-    // tiltDir = tiltDirection;
+
+    // if (gimbalMode == GIMBAL_MODE_ARMED) {
+    //     float tiltPidOutput = PID_update(&tiltPositionController, 1000.0f, (float)tiltRawAngle);
+    //     float tiltPwmDutyCycle = PID_normaliseOutput(&tiltPositionController, -100.0f, 100.0f);
+    //     uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
+    //     gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
+    //     pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
+
+    //     tiltPid = tiltPidOutput;
+    //     tiltDir = tiltDirection;
+    // }
 
     // Handle print flag toggling
     static int counter = 0; 
@@ -106,6 +118,8 @@ int main() {
     stdio_init_all();
 
     sleep_ms(10000); // Allow time to open serial monitor
+
+    gimbalMode = GIMBAL_MODE_FREE;
 
     // Configure I2C Communication
     i2c_init(PAN_I2C_PORT, 400000);
@@ -185,15 +199,17 @@ int main() {
         command = readSerialCommand_nonBlocking();
         if (command != NULL) {
             // Handle command (agrument parser)
-            cancel_repeating_timer(&timer);
-            printf("Tunring interrupts off\n");
-            uint32_t interrupts = save_and_disable_interrupts();
-            for (int i = 0; i < 100000000; i++) {
-                //
-            }
-            restore_interrupts(interrupts);
-            printf("Tunring interrupts back on\n");
-            add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
+            //
+
+            // cancel_repeating_timer(&timer);
+            // printf("Turning interrupts off\n");
+            // uint32_t interrupts = save_and_disable_interrupts();
+            // for (int i = 0; i < 100000000; i++) {
+            //     //
+            // }
+            // restore_interrupts(interrupts);
+            // printf("Turning interrupts back on\n");
+            // add_repeating_timer_us(-CONTROLS_FREQ, updateMotors, NULL, &timer);
         }
     }
 

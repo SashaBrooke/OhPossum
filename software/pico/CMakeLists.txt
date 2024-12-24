@@ -10,7 +10,8 @@ set(SOURCES
     src/gimbal.c
     src/as5600.c
     src/pid.c
-    src/command_input.c
+    src/command.c
+    src/gimbal_configuration.c
 )
 
 # Optional: Automatically collect all .c files in the src/ directory
@@ -24,6 +25,7 @@ target_link_libraries(ohpossum-controls
     pico_stdlib
     hardware_i2c
     hardware_pwm
+    hardware_flash
     hardware_sync
 )
 

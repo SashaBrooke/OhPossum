@@ -9,7 +9,7 @@
 
 #include "pico/stdlib.h"
 
-#include "command_input.h"
+#include "command.h"
 
 #define LF          10
 #define CR          13
@@ -58,4 +58,8 @@ char *readSerialCommand_nonBlocking() {
     }
 
     return NULL;
+}
+
+void *processCommands(char *input) {
+    //
 }

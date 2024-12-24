@@ -1,5 +1,5 @@
-#ifndef COMMAND_INPUT_H
-#define COMMAND_INPUT_H
+#ifndef COMMAND_H
+#define COMMAND_H
 
 void initSerialCommandInput();
 

@@ -7,6 +7,7 @@
 
 #include "pid.h"
 
+/* Setup the PID controller */
 PID_t PID_setup(float Kp, float Ki, float Kd, float tau, 
                 float outLimMin, float outLimMax, float intLimMin, 
                 float intLimMax, float T, float maxMeasurement) {

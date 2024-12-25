@@ -25,6 +25,119 @@ void loadGimbalConfiguration(gimbal_configuration_t *config) {
     printf("Gimbal configuration loaded successfully.\n");
 }
 
+void displayGimbal(gimbal_t *gimbal) {
+    // Whether the configuration is saved
+    printf("Saved Configuration: %s\n", gimbal->savedConfiguration ? "Yes" : "No");
+
+    // Gimbal mode
+    if (gimbal->gimbalMode == GIMBAL_MODE_FREE) {
+        printf("Gimbal Mode: GIMBAL_MODE_FREE\n");
+    } else if (gimbal->gimbalMode == GIMBAL_MODE_ARMED) {
+        printf("Gimbal Mode: GIMBAL_MODE_ARMED\n");
+    } else {
+        printf("Gimbal Mode: UNKNOWN\n");
+    }
+
+    // Pan position setpoint
+    printf("Pan Position Setpoint: %.2f\n", gimbal->panPositionSetpoint);
+
+    // Tilt position setpoint
+    // printf("Tilt Position Setpoint: %.2f\n", gimbal->tiltPositionSetpoint);
+
+    // Streaming status and rate
+    printf("Streaming: %s\n", gimbal->streaming ? "Enabled" : "Disabled");
+    printf("Stream Rate: %d\n", gimbal->streamRate);
+
+    // Pan position controller PID values
+    printf("Pan Position Controller:\n");
+    printf("  Kp: %.2f\n", gimbal->panPositionController.Kp);
+    printf("  Ki: %.2f\n", gimbal->panPositionController.Ki);
+    printf("  Kd: %.2f\n", gimbal->panPositionController.Kd);
+    printf("  tau: %.2f\n", gimbal->panPositionController.tau);
+    printf("  outLimMin: %.2f\n", gimbal->panPositionController.outLimMin);
+    printf("  outLimMax: %.2f\n", gimbal->panPositionController.outLimMax);
+    printf("  intLimMin: %.2f\n", gimbal->panPositionController.intLimMin);
+    printf("  intLimMax: %.2f\n", gimbal->panPositionController.intLimMax);
+    printf("  T: %.2f\n", gimbal->panPositionController.T);
+    printf("  integrator: %.2f\n", gimbal->panPositionController.integrator);
+    printf("  prevError: %.2f\n", gimbal->panPositionController.prevError);
+    printf("  differentiator: %.2f\n", gimbal->panPositionController.differentiator);
+    printf("  prevMeasurement: %.2f\n", gimbal->panPositionController.prevMeasurement);
+    printf("  output: %.2f\n", gimbal->panPositionController.output);
+    printf("  maxMeasurement: %.2f\n", gimbal->panPositionController.maxMeasurement);
+
+    // Tilt position controller PID values
+    // printf("Tilt Position Controller:\n");
+    // printf("  Kp: %.2f\n", gimbal->tiltPositionController.Kp);
+    // printf("  Ki: %.2f\n", gimbal->tiltPositionController.Ki);
+    // printf("  Kd: %.2f\n", gimbal->tiltPositionController.Kd);
+    // printf("  tau: %.2f\n", gimbal->tiltPositionController.tau);
+    // printf("  outLimMin: %.2f\n", gimbal->tiltPositionController.outLimMin);
+    // printf("  outLimMax: %.2f\n", gimbal->tiltPositionController.outLimMax);
+    // printf("  intLimMin: %.2f\n", gimbal->tiltPositionController.intLimMin);
+    // printf("  intLimMax: %.2f\n", gimbal->tiltPositionController.intLimMax);
+    // printf("  T: %.2f\n", gimbal->tiltPositionController.T);
+    // printf("  integrator: %.2f\n", gimbal->tiltPositionController.integrator);
+    // printf("  prevError: %.2f\n", gimbal->tiltPositionController.prevError);
+    // printf("  differentiator: %.2f\n", gimbal->tiltPositionController.differentiator);
+    // printf("  prevMeasurement: %.2f\n", gimbal->tiltPositionController.prevMeasurement);
+    // printf("  output: %.2f\n", gimbal->tiltPositionController.output);
+    // printf("  maxMeasurement: %.2f\n", gimbal->tiltPositionController.maxMeasurement);
+
+    // Pan encoder
+    printf("Pan Encoder:\n");
+    printf("  Initialised: %s\n", gimbal->panEncoder.initialised ? "Yes" : "No");
+    printf("  DIR_PIN: %d\n", gimbal->panEncoder.DIR_PIN);
+    printf("  Offset: %u\n", gimbal->panEncoder.offset);
+
+    // Tilt encoder
+    // printf("Tilt Encoder:\n");
+    // printf("  Initialised: %s\n", gimbal->tiltEncoder.initialised ? "Yes" : "No");
+    // printf("  DIR_PIN: %d\n", gimbal->tiltEncoder.DIR_PIN);
+    // printf("  Offset: %u\n", gimbal->tiltEncoder.offset);
+}
+
+void displayGimbalConfiguration(gimbal_configuration_t *config) {
+    // Gimbal serial number
+    printf("Gimbal Serial Number: %d\n", config->serialNumber);
+
+    // Pan position controller PID values
+    printf("Pan Position Controller:\n");
+    printf("  Kp: %.2f\n", config->panPositionController.Kp);
+    printf("  Ki: %.2f\n", config->panPositionController.Ki);
+    printf("  Kd: %.2f\n", config->panPositionController.Kd);
+    printf("  tau: %.2f\n", config->panPositionController.tau);
+    printf("  outLimMin: %.2f\n", config->panPositionController.outLimMin);
+    printf("  outLimMax: %.2f\n", config->panPositionController.outLimMax);
+    printf("  intLimMin: %.2f\n", config->panPositionController.intLimMin);
+    printf("  intLimMax: %.2f\n", config->panPositionController.intLimMax);
+    printf("  T: %.2f\n", config->panPositionController.T);
+    printf("  integrator: %.2f\n", config->panPositionController.integrator);
+    printf("  prevError: %.2f\n", config->panPositionController.prevError);
+    printf("  differentiator: %.2f\n", config->panPositionController.differentiator);
+    printf("  prevMeasurement: %.2f\n", config->panPositionController.prevMeasurement);
+    printf("  output: %.2f\n", config->panPositionController.output);
+    printf("  maxMeasurement: %.2f\n", config->panPositionController.maxMeasurement);
+
+    // Tilt position controller PID values
+    // printf("Tilt Position Controller:\n");
+    // printf("  Kp: %.2f\n", config->tiltPositionController.Kp);
+    // printf("  Ki: %.2f\n", config->tiltPositionController.Ki);
+    // printf("  Kd: %.2f\n", config->tiltPositionController.Kd);
+    // printf("  tau: %.2f\n", config->tiltPositionController.tau);
+    // printf("  outLimMin: %.2f\n", config->tiltPositionController.outLimMin);
+    // printf("  outLimMax: %.2f\n", config->tiltPositionController.outLimMax);
+    // printf("  intLimMin: %.2f\n", config->tiltPositionController.intLimMin);
+    // printf("  intLimMax: %.2f\n", config->tiltPositionController.intLimMax);
+    // printf("  T: %.2f\n", config->tiltPositionController.T);
+    // printf("  integrator: %.2f\n", config->tiltPositionController.integrator);
+    // printf("  prevError: %.2f\n", config->tiltPositionController.prevError);
+    // printf("  differentiator: %.2f\n", config->tiltPositionController.differentiator);
+    // printf("  prevMeasurement: %.2f\n", config->tiltPositionController.prevMeasurement);
+    // printf("  output: %.2f\n", config->tiltPositionController.output);
+    // printf("  maxMeasurement: %.2f\n", config->tiltPositionController.maxMeasurement);
+}
+
 void saveGimbalConfiguration(gimbal_configuration_t *config) {
     memcpy(&gc, config, sizeof(gimbal_configuration_t));
     uint8_t* configAsBytes = (uint8_t*) &gc;

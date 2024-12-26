@@ -36,9 +36,11 @@ typedef struct {
     // volatile PID_t tiltPositionController;
 } gimbal_configuration_t;
 
-void loadGimbalConfiguration(gimbal_configuration_t *config);
+void setupGimbal(gimbal_t *gimbal);
 
 void displayGimbal(gimbal_t *gimbal);
+
+void loadGimbalConfiguration(gimbal_configuration_t *config);
 
 void displayGimbalConfiguration(gimbal_configuration_t *config);
 

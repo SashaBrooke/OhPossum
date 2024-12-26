@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "pico/stdlib.h"
 #include "hardware/flash.h" // for the flash erasing and writing
@@ -9,20 +10,19 @@
 
 #define FLASH_TARGET_OFFSET (256 * 1024) // choosing to start at 256K
 
+//  DEFAULT GIMBAL VALUES
+const gimbal_mode_t  DEFAULT_GIMBAL_SAFE_MODE  = GIMBAL_MODE_FREE; // Safety: Force gimbal into free mode on powerup
+const bool           DEFAULT_SAVED_CONFIG_FLAG = true;             // No new settings to be saved on setup
+const bool           DEFAULT_STREAMING_STATUS  = true;             // May want to change startup behaviour later
+const int            DEFAULT_STREAM_RATE       = 10000;            // Change for higher resolution plot later
+
 static gimbal_configuration_t gc;
 
-void loadGimbalConfiguration(gimbal_configuration_t *config) {
-    if (config == NULL) {
-        return;
-    }
-
-    // Calculate the address in flash memory
-    const uint8_t* flash_target_contents = (const uint8_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
-
-    // Copy data from flash into the provided structure
-    memcpy(config, flash_target_contents, sizeof(gimbal_configuration_t));
-
-    printf("Gimbal configuration loaded successfully.\n");
+void setupGimbal(gimbal_t *gimbal) {
+    gimbal->gimbalMode = DEFAULT_GIMBAL_SAFE_MODE;
+    gimbal->savedConfiguration = DEFAULT_SAVED_CONFIG_FLAG;
+    gimbal->streaming = DEFAULT_STREAMING_STATUS;
+    gimbal->streamRate = DEFAULT_STREAM_RATE; 
 }
 
 void displayGimbal(gimbal_t *gimbal) {
@@ -95,6 +95,22 @@ void displayGimbal(gimbal_t *gimbal) {
     // printf("  Initialised: %s\n", gimbal->tiltEncoder.initialised ? "Yes" : "No");
     // printf("  DIR_PIN: %d\n", gimbal->tiltEncoder.DIR_PIN);
     // printf("  Offset: %u\n", gimbal->tiltEncoder.offset);
+
+    printf("\n");
+}
+
+void loadGimbalConfiguration(gimbal_configuration_t *config) {
+    if (config == NULL) {
+        return;
+    }
+
+    // Calculate the address in flash memory
+    const uint8_t* flash_target_contents = (const uint8_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
+
+    // Copy data from flash into the provided structure
+    memcpy(config, flash_target_contents, sizeof(gimbal_configuration_t));
+
+    printf("Gimbal configuration loaded successfully.\n");
 }
 
 void displayGimbalConfiguration(gimbal_configuration_t *config) {
@@ -136,6 +152,8 @@ void displayGimbalConfiguration(gimbal_configuration_t *config) {
     // printf("  prevMeasurement: %.2f\n", config->tiltPositionController.prevMeasurement);
     // printf("  output: %.2f\n", config->tiltPositionController.output);
     // printf("  maxMeasurement: %.2f\n", config->tiltPositionController.maxMeasurement);
+
+    printf("\n");
 }
 
 void saveGimbalConfiguration(gimbal_configuration_t *config) {

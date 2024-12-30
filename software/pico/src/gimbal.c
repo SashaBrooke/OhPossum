@@ -188,7 +188,7 @@ int main() {
     add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, &gimbal, &timer);
 
     // Enable serial commands
-    initSerialCommandInput();
+    resetSerialCommandInput();
     char* command;
 
     while(true) {
@@ -200,16 +200,16 @@ int main() {
         command = readSerialCommand_nonBlocking();
         if (command != NULL) {
             // Handle command (agrument parser)
-            //
+            processCommands(command, &gimbal, &gimbalConfig);
 
-            // Change for proper command handling
-            if (gimbal.gimbalMode == GIMBAL_MODE_FREE) {
-                gimbal.gimbalMode = GIMBAL_MODE_ARMED;
-                gimbal.savedConfiguration = false;
-            } else if (gimbal.gimbalMode == GIMBAL_MODE_ARMED) {
-                gimbal.gimbalMode = GIMBAL_MODE_FREE;
-                gimbal.savedConfiguration = false;
-            }
+            // // Change for proper command handling
+            // if (gimbal.gimbalMode == GIMBAL_MODE_FREE) {
+            //     gimbal.gimbalMode = GIMBAL_MODE_ARMED;
+            //     gimbal.savedConfiguration = false;
+            // } else if (gimbal.gimbalMode == GIMBAL_MODE_ARMED) {
+            //     gimbal.gimbalMode = GIMBAL_MODE_FREE;
+            //     gimbal.savedConfiguration = false;
+            // }
             displayGimbal(&gimbal);
 
             // cancel_repeating_timer(&timer);
@@ -220,6 +220,7 @@ int main() {
             // printf("Temp Serial Number (after save): %d\n", tmpConfig.serialNumber);
 
             // add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, NULL, &timer);
+            resetSerialCommandInput();
         }
     }
 

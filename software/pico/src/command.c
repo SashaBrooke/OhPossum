@@ -4,12 +4,16 @@
 // Currently limits the input buffer to a static length of 100
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
 #include "pico/stdlib.h"
 
 #include "command.h"
+#include "pid.h"
+#include "as5600.h"
+#include "gimbal_configuration.h"
 
 #define LF          10
 #define CR          13
@@ -19,7 +23,7 @@
 static char strg[100];
 static int lp = 0;
 
-void initSerialCommandInput() {
+void resetSerialCommandInput() {
     memset(strg, 0, sizeof(strg));
     lp = 0;
 }
@@ -28,6 +32,7 @@ void initSerialCommandInput() {
 // function will instantly read a single character without holding up
 // the execution of the program. Once the full message is read (CR, LF,
 // CRLF encountered), it is returned.
+// Input must be reset using resetSerialCommandInput() after each read.
 char *readSerialCommand_nonBlocking() {
     char chr = getchar_timeout_us(0);
 
@@ -37,7 +42,7 @@ char *readSerialCommand_nonBlocking() {
     }
 
     // Only process valid ASCII characters, CR, or LF
-    if ((chr >= 32 && chr <= 126) || chr == CR || chr == LF) {
+    if ((chr >= 32 && chr <= 126)) {
         strg[lp++] = chr;
     }
 
@@ -53,13 +58,61 @@ char *readSerialCommand_nonBlocking() {
         if (strlen(strg) > 0) {
             return strg;
         }
-        memset(strg, 0, sizeof(strg));  // Clear the buffer
-        lp = 0;  // Reset pointer
     }
 
     return NULL;
 }
 
-void *processCommands(char *input) {
-    //
+void processCommands(char *input, gimbal_t *gimbal, gimbal_configuration_t *config) {
+    char *command = strtok(input, " ");
+    while (command != NULL) {
+        executeCommand(command, gimbal, config);
+        command = strtok(NULL, " ");
+    }
+}
+
+void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *config) {
+    if (command == NULL || strlen(command) == 0) {
+        printf("Empty command encountered.\n");
+        return;
+    }
+
+    const char *supportedCommands[] = {"gimbal-mode"};
+    size_t supportedCommandsCount = sizeof(supportedCommands) / sizeof(supportedCommands[0]);
+
+    char *equals = strchr(command, '=');
+    char *name = command;
+    char *valueStr = NULL;
+
+    if (equals) {
+        *equals = '\0';
+        valueStr = equals + 1;
+    }
+
+    bool found = false;
+    for (size_t i = 0; i < supportedCommandsCount; ++i) {
+        if (strcmp(name, supportedCommands[i]) == 0) {
+            found = true;
+
+            if (strcmp(name, "gimbal-mode") == 0) {
+                if (valueStr) {
+                    int value = atoi(valueStr);
+                    if (value > GIMBAL_MODE_LOWER_LIMIT && value < GIMBAL_MODE_UPPER_LIMIT) {
+                        gimbal->gimbalMode = value;
+                        printf("Updated gimbalMode to %d\n", gimbal->gimbalMode);
+                    } else {
+                        printf("Gimbal mode values must be between %d-%d\n", 
+                               GIMBAL_MODE_LOWER_LIMIT + 1, GIMBAL_MODE_UPPER_LIMIT - 1);
+                    }
+                } else {
+                    printf("Command 'gimbal-mode' requires a value.\n");
+                }
+            }
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Unknown command: %s\n", name);
+    }
 }

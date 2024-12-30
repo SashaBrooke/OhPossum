@@ -5,8 +5,10 @@
 #include "as5600.h"
 
 typedef enum {
+    GIMBAL_MODE_LOWER_LIMIT,
     GIMBAL_MODE_FREE,
-    GIMBAL_MODE_ARMED
+    GIMBAL_MODE_ARMED,
+    GIMBAL_MODE_UPPER_LIMIT
 } gimbal_mode_t;
 
 typedef struct {

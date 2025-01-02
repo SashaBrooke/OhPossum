@@ -3,6 +3,11 @@
 
 #include "gimbal_configuration.h"
 
+typedef struct {
+    const char *name;
+    const char *description;
+} command_t;
+
 void resetSerialCommandInput();
 
 char *readSerialCommand_nonBlocking();

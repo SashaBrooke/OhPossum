@@ -77,9 +77,6 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         return;
     }
 
-    const char *supportedCommands[] = {"gimbal-mode"};
-    size_t supportedCommandsCount = sizeof(supportedCommands) / sizeof(supportedCommands[0]);
-
     char *equals = strchr(command, '=');
     char *name = command;
     char *valueStr = NULL;
@@ -89,30 +86,137 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         valueStr = equals + 1;
     }
 
-    bool found = false;
-    for (size_t i = 0; i < supportedCommandsCount; ++i) {
-        if (strcmp(name, supportedCommands[i]) == 0) {
-            found = true;
+    // ####################################################################################
+    //                               AVAILABLE COMMANDS
+    // ####################################################################################
+    command_t commands[] = {
+        {"help", "Show available commands."},
+        {"config-read", "Display the current gimbal configuration."},
+        {"config-save", "Save the current gimbal configuration."},
+        {"gimbal-read", "Display the current state of the gimbal."},
+        {"gimbal-free", "Set the gimbal to free mode."},
+        {"gimbal-arm", "Arm the gimbal and set initial pan and tilt setpoints."},
+        {"gimbal-stream", "Enable or disable gimbal streaming."},
+        {"gimbal-streamrate", "Set the gimbal stream rate."},
+        {"gimbal-serialno", "Set the gimbal serial number (limited to uint8 values)."},
+        {"pan-setpos", "Set the pan setpoint."}
+        // pan pid commands
+        // pan encoder offset (offset implementation TODO)
+        // tilt-setpos
+        // tilt pid commands
+        // tilt encoder offset (offset implementation TODO)
+    };
 
-            if (strcmp(name, "gimbal-mode") == 0) {
-                if (valueStr) {
-                    int value = atoi(valueStr);
-                    if (value > GIMBAL_MODE_LOWER_LIMIT && value < GIMBAL_MODE_UPPER_LIMIT) {
-                        gimbal->gimbalMode = value;
-                        printf("Updated gimbalMode to %d\n", gimbal->gimbalMode);
-                    } else {
-                        printf("Gimbal mode values must be between %d-%d\n", 
-                               GIMBAL_MODE_LOWER_LIMIT + 1, GIMBAL_MODE_UPPER_LIMIT - 1);
-                    }
-                } else {
-                    printf("Command 'gimbal-mode' requires a value.\n");
-                }
-            }
-            break;
+    if (strcmp(name, "help") == 0) { // "h" shortcut
+        size_t numCommands = sizeof(commands) / sizeof(command_t);
+        const int nameWidth = 20;
+
+        printf("Available commands:\n");
+        for (size_t i = 0; i < numCommands; ++i) {
+            printf("  %-*s %s\n", nameWidth, commands[i].name, commands[i].description);
         }
     }
 
-    if (!found) {
-        printf("Unknown command: %s\n", name);
+    else if (strcmp(name, "config-read") == 0) { // "cr" shortcut
+        displayGimbalConfiguration(config);
+    } 
+    
+    else if (strcmp(name, "config-save") == 0) { // "cs" shortcut
+        saveGimbalConfiguration(config);
+        gimbal->savedConfiguration = true;
+    } 
+    
+    else if (strcmp(name, "gimbal-read") == 0) { // "gr" shortcut
+        displayGimbal(gimbal);
+    } 
+
+    else if (strcmp(name, "gimbal-free") == 0) { // "free" shortcut
+        gimbal->gimbalMode = GIMBAL_MODE_FREE;
+        printf("Gimbal disarmed\n");
+    }
+
+    else if (strcmp(name, "gimbal-arm") == 0) { // "arm" shortcut
+        uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
+        // tilt
+
+        gimbal->panPositionSetpoint = (float)panRawAngle;
+        // tilt
+
+        gimbal->gimbalMode = GIMBAL_MODE_ARMED;
+        printf("Gimbal armed\n");
+    } 
+
+    else if (strcmp(name, "gimbal-stream") == 0) { // "gs" shortcut
+        if (valueStr) {
+            int value = atoi(valueStr);
+            if (value == 0 || value == 1) {
+                gimbal->streaming = (bool)value;
+                printf("%s streaming\n", value ? "Enabled" : "Disabled");
+            } else {
+                printf("Invalid value for 'gimbal-stream'. Use 0 (false) or 1 (true).\n");
+            }
+        } else {
+            printf("Command 'gimbal-stream' requires a value.\n");
+        }
+    }
+
+    else if (strcmp(name, "gimbal-streamrate") == 0) { // "gsr" shortcut
+        if (valueStr) {
+            int value = atoi(valueStr);
+            if (value >= GIMBAL_FAST_STREAM_RATE && value <= GIMBAL_SLOW_STREAM_RATE) {
+                gimbal->streamRate = value;
+                printf("Updated stream rate to %d\n", value);
+            } else {
+                printf("Stream rate values must be between %d-%d\n",
+                       GIMBAL_FAST_STREAM_RATE, GIMBAL_SLOW_STREAM_RATE);
+            }
+        } else {
+            printf("Command 'gimbal-streamrate' requires a value.\n");
+        }
+    }
+
+    else if (strcmp(name, "gimbal-serialno") == 0) { // "gsn" shortcut
+        if (valueStr) {
+            int value = atoi(valueStr);
+            if (value >= GIMBAL_SERIAL_NUMBER_MIN && value <= GIMBAL_SERIAL_NUMBER_MAX) {
+                config->serialNumber = value;
+                gimbal->savedConfiguration = false;
+                printf("Updated gimbal serial number to %d\n", value);
+            } else {
+                printf("Gimbal serial number must be between %d-%d\n", 
+                        GIMBAL_SERIAL_NUMBER_MIN, GIMBAL_SERIAL_NUMBER_MAX);
+            }
+        } else {
+            printf("Command 'gimbal-serialno' requires a value.\n");
+        }
+    } 
+
+    else if (strcmp(name, "pan-setpos") == 0) { // "ps" shortcut
+        if (valueStr) {
+            float value = atof(valueStr);
+            if (value >= AS5600_RAW_ANGLE_MIN && value <= AS5600_RAW_ANGLE_MAX) {
+                gimbal->panPositionSetpoint = value;
+                printf("Updated pan setpoint to %f\n", value);
+            } else {
+                printf("Setpoint values must be between %u-%u\n", 
+                        AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+            }
+        } else {
+            printf("Command 'pan-setpos' requires a value.\n");
+        }
+    }
+
+    // pan pid commands
+
+    // pan encoder offset (offset implementation TODO)
+
+    // tilt-setpos
+
+    // tilt pid commands
+
+    // tilt encoder offset (offset implementation TODO)
+    
+    else {
+        printf("Unknown command: '%s'\n", name);
     }
 }

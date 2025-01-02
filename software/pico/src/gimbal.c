@@ -105,7 +105,7 @@ bool updateMotors(repeating_timer_t *timer) {
     panPos = panRawAngle;
 
     if (gimbal->gimbalMode == GIMBAL_MODE_ARMED) {
-        float panPidOutput = PID_update(&gimbal->panPositionController, 4000.0f, (float)panRawAngle);
+        float panPidOutput = PID_update(&gimbal->panPositionController, gimbal->panPositionSetpoint, (float)panRawAngle);
         // float panPwmDutyCycle = PID_normaliseOutput(&gimbal->panPositionController, -100.0f, 100.0f);
         uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
         gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
@@ -133,7 +133,7 @@ bool updateMotors(repeating_timer_t *timer) {
     // Handle print flag toggling
     static int counter = 0; 
     counter++;
-    if (counter >= gimbal->streamRate) { // 5
+    if (counter >= gimbal->streamRate) {
         printFlag = true;
         counter = 0;
     }
@@ -171,14 +171,14 @@ int main() {
                                              -100.0f, 100.0f, 
                                              0.0f, 0.0f, 
                                              FREQ2PERIOD(CONTROLS_FREQ), 
-                                             (float)AS5600_RAW_ANGLE_RESOLUTION);
+                                             (float)AS5600_RAW_ANGLE_MAX);
     gimbalConfig.panPositionController = gimbal.panPositionController;
     // gimbal.tiltPositionController = PID_setup(1.0f, 0.0f, 0.0f, 
     //                                           0.0f, 
     //                                           -100.0f, 100.0f, 
     //                                           0.0f, 0.0f, 
     //                                           FREQ2PERIOD(CONTROLS_FREQ), 
-    //                                           (float)AS5600_RAW_ANGLE_RESOLUTION);
+    //                                           (float)AS5600_RAW_ANGLE_MAX);
     // gimbalConfig.tiltPositionController = gimbal.tiltPositionController;
 
     displayGimbal(&gimbal);
@@ -193,33 +193,15 @@ int main() {
 
     while(true) {
         if (gimbal.streaming && printFlag) {
-            printf("%u,%f,%u\n", panPos, panPid, panDir);
+            printf("%u,%f,%u,%f\n", panPos, panPid, panDir, gimbal.panPositionSetpoint);
             printFlag = false;  /**< Reset print flag */
         }
 
         command = readSerialCommand_nonBlocking();
         if (command != NULL) {
-            // Handle command (agrument parser)
+            cancel_repeating_timer(&timer);
             processCommands(command, &gimbal, &gimbalConfig);
-
-            // // Change for proper command handling
-            // if (gimbal.gimbalMode == GIMBAL_MODE_FREE) {
-            //     gimbal.gimbalMode = GIMBAL_MODE_ARMED;
-            //     gimbal.savedConfiguration = false;
-            // } else if (gimbal.gimbalMode == GIMBAL_MODE_ARMED) {
-            //     gimbal.gimbalMode = GIMBAL_MODE_FREE;
-            //     gimbal.savedConfiguration = false;
-            // }
-            displayGimbal(&gimbal);
-
-            // cancel_repeating_timer(&timer);
-
-            // saveGimbalConfiguration(&gimbalConfig);
-            // gimbal_configuration_t tmpConfig;
-            // loadGimbalConfiguration(&tmpConfig);
-            // printf("Temp Serial Number (after save): %d\n", tmpConfig.serialNumber);
-
-            // add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, NULL, &timer);
+            add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, &gimbal, &timer);
             resetSerialCommandInput();
         }
     }

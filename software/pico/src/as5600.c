@@ -20,7 +20,8 @@ const float    AS5600_RAW_TO_DEGREES       = 360.0 / 4096;
 const float    AS5600_DEGREES_TO_RAW       = 4096 / 360.0;
 
 //  Resolution
-const uint16_t AS5600_RAW_ANGLE_RESOLUTION = 4095;
+const uint16_t AS5600_RAW_ANGLE_MIN = 0;
+const uint16_t AS5600_RAW_ANGLE_MAX = 4095;
 
 //  OUTPUT REGISTERS
 const uint8_t  AS5600_RAW_ANGLE_REG        = 0x0C;  // + 0x0D

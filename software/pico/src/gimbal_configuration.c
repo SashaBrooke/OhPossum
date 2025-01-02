@@ -11,21 +11,24 @@
 #define FLASH_TARGET_OFFSET (256 * 1024) // choosing to start at 256K
 
 //  DEFAULT GIMBAL VALUES
-const gimbal_mode_t  DEFAULT_GIMBAL_SAFE_MODE  = GIMBAL_MODE_FREE; // Safety: Force gimbal into free mode on powerup
-const bool           DEFAULT_SAVED_CONFIG_FLAG = true;             // No new settings to be saved on setup
-const bool           DEFAULT_STREAMING_STATUS  = true;             // May want to change startup behaviour later
-const int            DEFAULT_STREAM_RATE       = 10000;            // Change for higher resolution plot later
+const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE         = GIMBAL_MODE_FREE; // Safety: Force gimbal into free mode on powerup
+const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG = true;             // No new settings to be saved on setup
+const bool           GIMBAL_DEFAULT_STREAMING_STATUS  = true;             // May want to change startup behaviour later
+const int            GIMBAL_SLOW_STREAM_RATE          = 10000;  
+const int            GIMBAL_FAST_STREAM_RATE          = 1;           // Change for higher resolution plot later
 
 static gimbal_configuration_t gc;
 
 void setupGimbal(gimbal_t *gimbal) {
-    gimbal->gimbalMode = DEFAULT_GIMBAL_SAFE_MODE;
-    gimbal->savedConfiguration = DEFAULT_SAVED_CONFIG_FLAG;
-    gimbal->streaming = DEFAULT_STREAMING_STATUS;
-    gimbal->streamRate = DEFAULT_STREAM_RATE; 
+    gimbal->gimbalMode = GIMBAL_DEFAULT_SAFE_MODE;
+    gimbal->savedConfiguration = GIMBAL_DEFAULT_SAVED_CONFIG_FLAG;
+    gimbal->streaming = GIMBAL_DEFAULT_STREAMING_STATUS;
+    gimbal->streamRate = GIMBAL_SLOW_STREAM_RATE; 
 }
 
 void displayGimbal(gimbal_t *gimbal) {
+    printf("----------- Gimbal: -----------\n");
+    
     // Whether the configuration is saved
     printf("Saved Configuration: %s\n", gimbal->savedConfiguration ? "Yes" : "No");
 
@@ -114,6 +117,8 @@ void loadGimbalConfiguration(gimbal_configuration_t *config) {
 }
 
 void displayGimbalConfiguration(gimbal_configuration_t *config) {
+    printf("---- Gimbal configuration: ----\n");
+
     // Gimbal serial number
     printf("Gimbal Serial Number: %d\n", config->serialNumber);
 

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 
 #include "pico/stdlib.h"
 
@@ -15,10 +16,12 @@
 #include "as5600.h"
 #include "gimbal_configuration.h"
 
-#define LF          10
-#define CR          13
-#define NO_VAL      254
-#define ENDSTDIN    255
+#define LF           10
+#define CR           13
+#define NO_VAL       254
+#define ENDSTDIN     255
+
+#define DECIMAL_BASE 10
 
 static char strg[100];
 static int lp = 0;
@@ -147,13 +150,17 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     } 
 
     else if (strcmp(name, "gimbal-stream") == 0) { // "gs" shortcut
-        if (valueStr) {
-            int value = atoi(valueStr);
-            if (value == 0 || value == 1) {
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+                printf("Invalid value for 'gimbal-stream'. Use 0 (false) or 1 (true).\n");
+            } else {
                 gimbal->streaming = (bool)value;
                 printf("%s streaming\n", value ? "Enabled" : "Disabled");
-            } else {
-                printf("Invalid value for 'gimbal-stream'. Use 0 (false) or 1 (true).\n");
             }
         } else {
             printf("Command 'gimbal-stream' requires a value.\n");
@@ -161,14 +168,18 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     }
 
     else if (strcmp(name, "gimbal-streamrate") == 0) { // "gsr" shortcut
-        if (valueStr) {
-            int value = atoi(valueStr);
-            if (value >= GIMBAL_FAST_STREAM_RATE && value <= GIMBAL_SLOW_STREAM_RATE) {
-                gimbal->streamRate = value;
-                printf("Updated stream rate to %d\n", value);
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || value < GIMBAL_FAST_STREAM_RATE || value > GIMBAL_SLOW_STREAM_RATE) {
+                printf("Invalid value for 'gimbal-streamrate'. Use a value between %d-%d.\n",
+                    GIMBAL_FAST_STREAM_RATE, GIMBAL_SLOW_STREAM_RATE);
             } else {
-                printf("Stream rate values must be between %d-%d\n",
-                       GIMBAL_FAST_STREAM_RATE, GIMBAL_SLOW_STREAM_RATE);
+                gimbal->streamRate = (int)value;
+                printf("Updated stream rate to %d\n", (int)value);
             }
         } else {
             printf("Command 'gimbal-streamrate' requires a value.\n");
@@ -176,35 +187,43 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     }
 
     else if (strcmp(name, "gimbal-serialno") == 0) { // "gsn" shortcut
-        if (valueStr) {
-            int value = atoi(valueStr);
-            if (value >= GIMBAL_SERIAL_NUMBER_MIN && value <= GIMBAL_SERIAL_NUMBER_MAX) {
-                config->serialNumber = value;
-                gimbal->savedConfiguration = false;
-                printf("Updated gimbal serial number to %d\n", value);
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || value < GIMBAL_SERIAL_NUMBER_MIN || value > GIMBAL_SERIAL_NUMBER_MAX) {
+                printf("Invalid value for 'gimbal-serialno'. Must be between %d-%d.\n",
+                       GIMBAL_SERIAL_NUMBER_MIN, GIMBAL_SERIAL_NUMBER_MAX);
             } else {
-                printf("Gimbal serial number must be between %d-%d\n", 
-                        GIMBAL_SERIAL_NUMBER_MIN, GIMBAL_SERIAL_NUMBER_MAX);
+                config->serialNumber = (int)value;
+                gimbal->savedConfiguration = false;
+                printf("Updated gimbal serial number to %d\n", (int)value);
             }
         } else {
             printf("Command 'gimbal-serialno' requires a value.\n");
         }
-    } 
+    }
 
     else if (strcmp(name, "pan-setpos") == 0) { // "ps" shortcut
-        if (valueStr) {
-            float value = atof(valueStr);
-            if (value >= AS5600_RAW_ANGLE_MIN && value <= AS5600_RAW_ANGLE_MAX) {
-                gimbal->panPositionSetpoint = value;
-                printf("Updated pan setpoint to %f\n", value);
-            } else {
-                printf("Setpoint values must be between %u-%u\n", 
-                        AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
-            }
+    if (valueStr && valueStr[0] != '\0') {
+        char *endptr;
+        errno = 0;
+
+        float value = strtof(valueStr, &endptr);
+
+        if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
+            printf("Invalid value for 'pan-setpos'. Setpoint values must be between %u-%u.\n",
+                   AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
         } else {
-            printf("Command 'pan-setpos' requires a value.\n");
+            gimbal->panPositionSetpoint = value;
+            printf("Updated pan setpoint to %f\n", value);
         }
+    } else {
+        printf("Command 'pan-setpos' requires a value.\n");
     }
+}
 
     // pan pid commands
 

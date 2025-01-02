@@ -20,8 +20,8 @@ const float    AS5600_RAW_TO_DEGREES       = 360.0 / 4096;
 const float    AS5600_DEGREES_TO_RAW       = 4096 / 360.0;
 
 //  Resolution
-const uint16_t AS5600_RAW_ANGLE_MIN = 0;
-const uint16_t AS5600_RAW_ANGLE_MAX = 4095;
+const uint16_t AS5600_RAW_ANGLE_MIN        = 0;
+const uint16_t AS5600_RAW_ANGLE_MAX        = 4095;
 
 //  OUTPUT REGISTERS
 const uint8_t  AS5600_RAW_ANGLE_REG        = 0x0C;  // + 0x0D
@@ -155,11 +155,11 @@ uint16_t AS5600_getRawAngle(volatile AS5600_t *enc) {
         return 0;
     }
     if (enc->initialised) {
-        uint8_t rawAngleReg = 0x0C;
+        uint8_t rawAngleReg = AS5600_RAW_ANGLE_REG;
         uint8_t rawAngle[2];
 
-        i2c_write_blocking(i2c0, 0x36, &rawAngleReg, 1, true);
-        i2c_read_blocking(i2c0, 0x36, rawAngle, 2, false);
+        i2c_write_blocking(i2c0, AS5600_DEFAULT_I2C_ADDR, &rawAngleReg, 1, true);
+        i2c_read_blocking(i2c0, AS5600_DEFAULT_I2C_ADDR, rawAngle, 2, false);
 
         // Shift the lower 4 bits from the high byte and combine with the 8 bits from the low byte
         uint16_t combinedRawAngle = ((rawAngle[0] & 0x0F) << 8) | rawAngle[1];

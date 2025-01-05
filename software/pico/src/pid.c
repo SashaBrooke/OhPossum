@@ -1,9 +1,22 @@
-// TODO: Documentation
+/**
+ * @file pid.c
+ * @brief A simple PID controller implementation.
+ *
+ * This implementation uses the classic PID algorithm to implement a simple
+ * controller with the added benefits of using derivative low pass filtering 
+ * and integral term clamping. The module also contains associated functions 
+ * for configuring and updating the PID controller.
+ * 
+ * @note This implementation has a special use case for rotational control,
+ *       able to determine the 'shortest' path to a desired setpoint by
+ *       wrapping around the provided maximum measurement to zero.
+ * 
+ * Modified from @link https://github.com/pms67/PID
+ */
 
-// #include <stdio.h> // For debugging
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 
 #include "pid.h"
 
@@ -11,33 +24,36 @@
 PID_t PID_setup(float Kp, float Ki, float Kd, float tau, 
                 float outLimMin, float outLimMax, float intLimMin, 
                 float intLimMax, float T, float maxMeasurement) {
-    PID_t controller;
-    PID_t *pid = &controller;
+    // Prevent invalid configurations
+    if (T <= 0.0f) {
+        fprintf(stderr, "Error: Sampling time T must be greater than zero.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (maxMeasurement <= 0.0f) {
+        fprintf(stderr, "Error: Maximum measurement must be greater than zero.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    pid->Kp = Kp;
-    pid->Ki = Ki;
-    pid->Kd = Kd;
+    // Initialize the PID structure
+    PID_t pid = {
+        .Kp = Kp,
+        .Ki = Ki,
+        .Kd = Kd,
+        .tau = tau,
+        .outLimMin = outLimMin,
+        .outLimMax = outLimMax,
+        .intLimMin = intLimMin,
+        .intLimMax = intLimMax,
+        .T = T,
+        .integrator = 0.0f,
+        .prevError = 0.0f,
+        .differentiator = 0.0f,
+        .prevMeasurement = 0.0f,
+        .output = 0.0f,
+        .maxMeasurement = maxMeasurement
+    };
 
-    pid->tau = tau;
-
-    pid->outLimMin = outLimMin;
-    pid->outLimMax = outLimMax;
-
-    pid->intLimMin = intLimMin;
-    pid->intLimMax = intLimMax;
-
-    pid->T = T;
-
-    pid->integrator = 0.0f;
-    pid->prevError = 0.0f;
-    pid->differentiator = 0.0f;
-    pid->prevMeasurement = 0.0f;
-
-    pid->output = 0.0f;
-
-    pid->maxMeasurement = maxMeasurement;
-
-    return controller;
+    return pid;
 }
 
 /* Update the PID controller */
@@ -53,27 +69,23 @@ float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
 
     // Proportional term
     float proportional = pid->Kp * error;
-    // printf("Proportional: %f\n", proportional);
 
     // Integral term with anti-windup clamping
     pid->integrator += 0.5f * pid->Ki * pid->T * (error + pid->prevError);
-    // printf("Integrator: %f\n", pid->integrator);
 
-    // if (pid->integrator > pid->intLimMax) {
-    //     pid->integrator = pid->intLimMax;
-    // } else if (pid->integrator < pid->intLimMin) {
-    //     pid->integrator = pid->intLimMin;
-    // }
+    if (pid->integrator > pid->intLimMax) {
+        pid->integrator = pid->intLimMax;
+    } else if (pid->integrator < pid->intLimMin) {
+        pid->integrator = pid->intLimMin;
+    }
 
     // Derivative term (band-limited differentiator)
     pid->differentiator = -(2.0f * pid->Kd * (measurement - pid->prevMeasurement)
                         + (2.0f * pid->tau - pid->T) * pid->differentiator)
                         / (2.0f * pid->tau + pid->T);
-    // printf("Differentiator: %f\n", pid->differentiator);
 
     // Compute output
     pid->output = proportional + pid->integrator + pid->differentiator;
-    // printf("Pre-clamp output: %f\n", pid->output);
 
     // Clamp output
     if (pid->output > pid->outLimMax) {
@@ -89,6 +101,7 @@ float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
     return pid->output;
 }
 
+/* Normalise controller output to specified range */
 float PID_normaliseOutput(volatile PID_t *pid, float newMin, float newMax) {
     return ((pid->output - pid->outLimMin) / 
         (pid->outLimMax - pid->outLimMin) * 

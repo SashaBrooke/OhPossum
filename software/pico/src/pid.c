@@ -11,7 +11,7 @@
  *       able to determine the 'shortest' path to a desired setpoint by
  *       wrapping around the provided maximum measurement to zero.
  * 
- * Modified from @link https://github.com/pms67/PID
+ * Modified from (see LICENSE-PID): @link https://github.com/pms67/PID
  */
 
 #include <stdio.h>

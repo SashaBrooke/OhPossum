@@ -1,18 +1,6 @@
 /**
  * @file pid.c
- * @brief A simple PID controller implementation.
- *
- * This implementation uses the classic PID algorithm to implement a simple
- * controller with the added benefits of using derivative low pass filtering 
- * and integral term clamping. The module also contains associated functions 
- * for configuring and updating the PID controller.
- * 
- * @note This implementation has a special use case for rotational control,
- *       able to determine the 'shortest' path to a desired setpoint by
- *       wrapping around the provided maximum measurement to zero.
- * 
- * Modified from 'PID' by Philip Salmony (see LICENSE-PID): 
- * @link https://github.com/pms67/PID
+ * @brief Source file for PID controller implementation.
  */
 
 #include <stdio.h>

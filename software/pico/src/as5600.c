@@ -1,7 +1,11 @@
-// TODO: Documentation
+/**
+ * @file as5600.c
+ * @brief Source file for the AS5600 magnetic rotary encoder library module.
+ */
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <cstddef>
 
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -35,24 +39,23 @@ const uint8_t  AS5600_MAGNET_DETECTED      = 0x20;
 const uint8_t  AS5600_MAGNET_TOO_WEAK      = 0x10;
 const uint8_t  AS5600_MAGNET_TOO_STRONG    = 0x08;
 
+/* Set up AS5600 encoder */
 AS5600_t AS5600_setup(i2c_inst_t *i2c, uint8_t DIR_PIN, uint8_t direction) {
-    AS5600_t encoder;
-    AS5600_t *enc = &encoder;
-
-    enc->i2c = i2c;
-    enc->DIR_PIN = DIR_PIN;
-
-    enc->offset = 0;
+    AS5600_t encoder = {
+        .initialised = true,
+        .i2c = i2c,
+        .DIR_PIN = DIR_PIN,
+        .offset = 0
+    };
 
     gpio_init(DIR_PIN);
     gpio_set_dir(DIR_PIN, GPIO_OUT);
     gpio_put(DIR_PIN, direction);
 
-    enc->initialised = true;
-
     return encoder;
 }
 
+/* Check if the encoder is connected (reachable) */
 bool AS5600_isConnected(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
@@ -64,6 +67,7 @@ bool AS5600_isConnected(volatile AS5600_t *enc) {
     return false;
 }
 
+/* Read the encoder status register */
 uint8_t AS5600_readStatus(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;
@@ -82,6 +86,7 @@ uint8_t AS5600_readStatus(volatile AS5600_t *enc) {
     return 0;
 }
 
+/* Check if the encoder magnet is detected */
 bool AS5600_magnetDetected(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
@@ -94,6 +99,7 @@ bool AS5600_magnetDetected(volatile AS5600_t *enc) {
     return false;
 }
 
+/* Check if the encoder magnet is too weak */
 bool AS5600_magnetTooWeak(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
@@ -106,6 +112,7 @@ bool AS5600_magnetTooWeak(volatile AS5600_t *enc) {
     return false;
 }
 
+/* Check if the encoder magnet is too strong */
 bool AS5600_magnetTooStrong(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
@@ -118,6 +125,7 @@ bool AS5600_magnetTooStrong(volatile AS5600_t *enc) {
     return false;
 }
 
+/* Check if the encoder magnet is within the optimal range */
 bool AS5600_magnetGood(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return false;
@@ -132,6 +140,7 @@ bool AS5600_magnetGood(volatile AS5600_t *enc) {
     return false;
 }
 
+/* Read the encoder AGC register */
 uint8_t AS5600_readAGC(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;
@@ -150,6 +159,7 @@ uint8_t AS5600_readAGC(volatile AS5600_t *enc) {
     return 0;
 }
 
+/* Read the encoder raw angle */
 uint16_t AS5600_getRawAngle(volatile AS5600_t *enc) {
     if (enc == NULL) {
         return 0;

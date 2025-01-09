@@ -1,7 +1,7 @@
-// TODO: Documentation
-// Currently supports CR, LF and CRLF end of message
-// Currently only supports a single input stream
-// Currently limits the input buffer to a static length of 100
+/**
+ * @file command.c
+ * @brief Source file for serial command gimbal control module.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,26 +16,29 @@
 #include "as5600.h"
 #include "gimbal_configuration.h"
 
+// Special character values
 #define LF           10
 #define CR           13
 #define NO_VAL       254
 #define ENDSTDIN     255
 
+// Input radix
 #define DECIMAL_BASE 10
 
+// Input buffer and pointer
 static char strg[100];
 static int lp = 0;
 
+/* Reset command buffer memory and pointer (to start) */
 void resetSerialCommandInput() {
     memset(strg, 0, sizeof(strg));
     lp = 0;
 }
 
-// Designed to be ran inside a repeating loop. Each loop iteration this
-// function will instantly read a single character without holding up
-// the execution of the program. Once the full message is read (CR, LF,
-// CRLF encountered), it is returned.
-// Input must be reset using resetSerialCommandInput() after each read.
+/* 
+    Read a single character from serial input into a buffer
+    and return full command string when CR, LF or CRLF is encountered 
+*/
 char *readSerialCommand_nonBlocking() {
     char chr = getchar_timeout_us(0);
 
@@ -45,13 +48,11 @@ char *readSerialCommand_nonBlocking() {
     }
 
     // Only process valid ASCII characters, CR, or LF
-    if ((chr >= 32 && chr <= 126)) {
+    if (chr >= 32 && chr <= 126) {
         strg[lp++] = chr;
     }
 
-    bool endOfInput = (chr == CR && (getchar_timeout_us(0) == LF)) || 
-                        (chr == CR) || 
-                        (chr == LF);
+    bool endOfInput = (chr == CR && (getchar_timeout_us(0) == LF)) || (chr == CR) || (chr == LF);
 
     bool bufferFull = (lp == (sizeof(strg) - 1));
 
@@ -59,21 +60,25 @@ char *readSerialCommand_nonBlocking() {
     if (endOfInput || bufferFull) {
         strg[lp] = 0;  // Null-terminate
         if (strlen(strg) > 0) {
-            return strg;
+            return strg; // WARNING: INPUT BUFFER AND POINTER MUST BE RESET AFTER A COMMAND IS RETURNED
         }
     }
 
     return NULL;
 }
 
+/* Process, split and call execute on multiple commands */
 void processCommands(char *input, gimbal_t *gimbal, gimbal_configuration_t *config) {
     char *command = strtok(input, " ");
+
+    // Until no comands left to process, execute the current function
     while (command != NULL) {
         executeCommand(command, gimbal, config);
         command = strtok(NULL, " ");
     }
 }
 
+/* Execute individual commands */
 void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *config) {
     if (command == NULL || strlen(command) == 0) {
         printf("Empty command encountered.\n");
@@ -84,6 +89,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     char *name = command;
     char *valueStr = NULL;
 
+    // For commands where a value is expected, terminate at the equals and separate the value
     if (equals) {
         *equals = '\0';
         valueStr = equals + 1;
@@ -92,6 +98,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     // ####################################################################################
     //                               AVAILABLE COMMANDS
     // ####################################################################################
+    
     command_t commands[] = {
         {"help", "Show available commands."},
         {"config-read", "Display the current gimbal configuration."},
@@ -110,10 +117,12 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         // tilt encoder offset (offset implementation TODO)
     };
 
+    size_t numCommands = sizeof(commands) / sizeof(command_t);
+
     if (strcmp(name, "help") == 0) { // "h" shortcut
-        size_t numCommands = sizeof(commands) / sizeof(command_t);
         const int nameWidth = 20;
 
+        // Print out all available commands
         printf("Available commands:\n");
         for (size_t i = 0; i < numCommands; ++i) {
             printf("  %-*s %s\n", nameWidth, commands[i].name, commands[i].description);
@@ -139,9 +148,11 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     }
 
     else if (strcmp(name, "gimbal-arm") == 0) { // "arm" shortcut
+        // Get current gimbal angles
         uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
         // tilt
 
+        // Set setpoint for each axis to the current angle of that axis (smooth arming)
         gimbal->panPositionSetpoint = (float)panRawAngle;
         // tilt
 

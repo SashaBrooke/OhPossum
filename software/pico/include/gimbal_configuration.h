@@ -55,4 +55,4 @@ void displayGimbalConfiguration(gimbal_configuration_t *config);
 
 void saveGimbalConfiguration(gimbal_configuration_t *config);
 
-#endif
+#endif // GIMBAL_CONFIGURATION_H

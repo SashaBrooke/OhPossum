@@ -53,4 +53,4 @@ uint8_t AS5600_readAGC(volatile AS5600_t *enc);
 
 uint16_t AS5600_getRawAngle(volatile AS5600_t *enc);
 
-#endif
+#endif // AS5600_H

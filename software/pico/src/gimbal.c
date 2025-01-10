@@ -1,3 +1,8 @@
+/**
+ * @file gimbal.c
+ * @brief Source file for gimbal controls system module.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -14,9 +19,10 @@
 #include "command.h"
 #include "gimbal_configuration.h"
 
-#define FREQ2PERIOD(freq) ((freq) != 0 ? (1.0f / (freq)) : 0.0f)
-#define SECS2USECS(secs)  ((secs) * 1000000)
+#define FREQ2PERIOD(freq) ((freq) != 0 ? (1.0f / (freq)) : 0.0f) // Converts a frequency in Hz to a period in seconds
+#define SECS2USECS(secs)  ((secs) * 1000000)                     // Converts a time from seconds to micro-seconds
 
+// Pan hardware
 #define PAN_I2C_PORT        i2c0
 #define PAN_I2C_SDA_PIN     4
 #define PAN_I2C_SCL_PIN     5
@@ -24,6 +30,7 @@
 #define PAN_PWM_PIN         6
 #define PAN_MOTOR_DIR_PIN   8
 
+// // Tilt hardware
 // #define TILT_I2C_PORT       i2c1
 // #define TILT_I2C_SDA_PIN    10
 // #define TILT_I2C_SCL_PIN    11
@@ -31,16 +38,17 @@
 // #define TILT_PWM_PIN        7
 // #define TILT_MOTOR_DIR_PIN  9
 
+// Debug hardware
 #define TEST_PIN 0
 
+// PWM settings
 #define PWM_TOP_REG 100
 #define PWM_CLK_DIVIDER 125.0f
 
+// Controls loop frequency
 #define CONTROLS_FREQ 1000
 
-typedef struct repeating_timer repeating_timer_t;
-
-// Variables
+// Stream variables
 volatile uint16_t panPos = 0;
 volatile float panPid = 1.0f;
 volatile uint8_t panDir = 0;
@@ -51,6 +59,9 @@ volatile uint8_t panDir = 0;
 
 volatile bool printFlag = false;
 
+/**
+ * @brief Configures GPIO pins and peripherals for I2C, PWM, and debugging.
+ */
 void setupGPIO() {
     // Configure I2C Communication
     i2c_init(PAN_I2C_PORT, 400000);
@@ -94,10 +105,17 @@ void setupGPIO() {
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
 }
 
+/**
+ * @brief Timer callback to perform the gimbal control system loop.
+ * 
+ * @param timer Pointer to the repeating timer instance calling the callback.
+ * @return Always returns true to keep the timer active.
+ */
 bool updateMotors(repeating_timer_t *timer) {
     // Timing debug
     gpio_put(TEST_PIN, 1);
 
+    // Get gimbal state
     gimbal_t *gimbal = (gimbal_t *)timer->user_data;
 
     // Pan
@@ -184,7 +202,7 @@ int main() {
     displayGimbal(&gimbal);
 
     printf("Starting controls loop\n");
-    repeating_timer_t timer; // Maybe use real time clock peripheral if for use longer than ~72 mins
+    repeating_timer_t timer; // Consider using real time clock peripheral if for use longer than ~72 mins
     add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, &gimbal, &timer);
 
     // Enable serial commands

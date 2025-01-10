@@ -1,24 +1,30 @@
+/**
+ * @file gimbal_configuration.c
+ * @brief Source file for gimbal settings and configurations module.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
 #include "pico/stdlib.h"
-#include "hardware/flash.h" // for the flash erasing and writing
-#include "hardware/sync.h" // for the interrupts
+#include "hardware/flash.h"
+#include "hardware/sync.h"
 
 #include "gimbal_configuration.h"
 
-#define FLASH_TARGET_OFFSET (256 * 1024) // choosing to start at 256K
+#define FLASH_TARGET_OFFSET (256 * 1024) // Choosing to start at 256K
 
 //  DEFAULT GIMBAL VALUES
-const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE         = GIMBAL_MODE_FREE; // Safety: Force gimbal into free mode on powerup
+const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE         = GIMBAL_MODE_FREE; // Safety: Force into free mode on powerup
 const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG = true;             // No new settings to be saved on setup
 const bool           GIMBAL_DEFAULT_STREAMING_STATUS  = true;             // May want to change startup behaviour later
 const int            GIMBAL_SLOW_STREAM_RATE          = 10000;  
-const int            GIMBAL_FAST_STREAM_RATE          = 1;           // Change for higher resolution plot later
+const int            GIMBAL_FAST_STREAM_RATE          = 1;
 
 static gimbal_configuration_t gc;
 
+/* Set up gimbal with default settings */
 void setupGimbal(gimbal_t *gimbal) {
     gimbal->gimbalMode = GIMBAL_DEFAULT_SAFE_MODE;
     gimbal->savedConfiguration = GIMBAL_DEFAULT_SAVED_CONFIG_FLAG;
@@ -26,6 +32,7 @@ void setupGimbal(gimbal_t *gimbal) {
     gimbal->streamRate = GIMBAL_SLOW_STREAM_RATE; 
 }
 
+/* Display gimbal settings */
 void displayGimbal(gimbal_t *gimbal) {
     printf("----------- Gimbal: -----------\n");
     
@@ -102,6 +109,7 @@ void displayGimbal(gimbal_t *gimbal) {
     printf("\n");
 }
 
+/* Load gimbal configuration from non-volatile flash memory */
 void loadGimbalConfiguration(gimbal_configuration_t *config) {
     if (config == NULL) {
         return;
@@ -116,6 +124,7 @@ void loadGimbalConfiguration(gimbal_configuration_t *config) {
     printf("Gimbal configuration loaded successfully.\n");
 }
 
+/* Display gimbal configuration */
 void displayGimbalConfiguration(gimbal_configuration_t *config) {
     printf("---- Gimbal configuration: ----\n");
 
@@ -161,13 +170,17 @@ void displayGimbalConfiguration(gimbal_configuration_t *config) {
     printf("\n");
 }
 
+/* Save gimbal configuration to non-volatile flash memory */
 void saveGimbalConfiguration(gimbal_configuration_t *config) {
     memcpy(&gc, config, sizeof(gimbal_configuration_t));
     uint8_t* configAsBytes = (uint8_t*) &gc;
     int configSize = sizeof(*config);
     
-    int writeSize = (configSize / FLASH_PAGE_SIZE) + 1; // how many flash pages we're gonna need to write
-    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1; // how many flash sectors we're gonna need to erase
+    // Calculate how many flash pages we're gonna need to write
+    int writeSize = (configSize / FLASH_PAGE_SIZE) + 1;
+
+    // Calculate how many flash sectors we're gonna need to erase
+    int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1;
         
     printf("Programming flash target region...\n");
 

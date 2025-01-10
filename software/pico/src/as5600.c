@@ -5,7 +5,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <cstddef>
 
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"

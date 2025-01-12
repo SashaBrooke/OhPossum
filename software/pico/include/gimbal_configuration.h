@@ -89,8 +89,10 @@ void displayGimbal(gimbal_t *gimbal);
  * Retrieves the a saved gimbal configuration from non-volatile memory.
  *
  * @param config Pointer to the gimbal configuration structure to load into.
+ * @return `true` if a configuration was loaded,
+ *         `false` if none was found to load.
  */
-void loadGimbalConfiguration(gimbal_configuration_t *config);
+bool loadGimbalConfiguration(gimbal_configuration_t *config);
 
 /**
  * @brief Displays the saved configuration of the gimbal.
@@ -106,5 +108,35 @@ void displayGimbalConfiguration(gimbal_configuration_t *config);
  * @param config Pointer to the gimbal configuration structure to save.
  */
 void saveGimbalConfiguration(gimbal_configuration_t *config);
+
+/**
+ * @brief Calculates an XOR checksum for a given data buffer.
+ *
+ * This function iterates over each byte in the provided data buffer and calculates
+ * the checksum by XORing each byte. The resulting checksum is returned as an 8-bit
+ * value. This checksum can be used to verify the integrity of the data later.
+ *
+ * @param[in] data Pointer to the data buffer for which the checksum is calculated.
+ * @param[in] size The size (in bytes) of the data buffer.
+ *
+ * @return The XOR checksum of the provided data buffer as an 8-bit unsigned integer.
+ */
+uint8_t calculateChecksum(uint8_t* data, int size);
+
+/**
+ * @brief Verifies the integrity of the data using the provided checksum.
+ *
+ * This function extracts the stored checksum from the last byte of the data buffer,
+ * recalculates the checksum over the remaining data (excluding the checksum byte),
+ * and compares the two. If the recalculated checksum matches the stored checksum,
+ * the data is considered valid; otherwise, it is deemed corrupted/modified/invalid.
+ *
+ * @param[in] data Pointer to the data buffer containing both the data and the checksum.
+ * @param[in] sizeWithChecksum The size (in bytes) of the entire data buffer, including the checksum.
+ *
+ * @return `true` if the checksum verification is successful (i.e., the checksums match),
+ *         `false` if the checksum verification fails (i.e., the checksums do not match).
+ */
+bool verifyChecksum(uint8_t *data, int sizeWithChecksum);
 
 #endif // GIMBAL_CONFIGURATION_H

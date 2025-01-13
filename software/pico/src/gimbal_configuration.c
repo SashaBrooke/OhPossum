@@ -69,7 +69,7 @@ void displayGimbal(gimbal_t *gimbal) {
     printf("  outLimMax: %.2f\n", gimbal->panPositionController.outLimMax);
     printf("  intLimMin: %.2f\n", gimbal->panPositionController.intLimMin);
     printf("  intLimMax: %.2f\n", gimbal->panPositionController.intLimMax);
-    printf("  T: %.2f\n", gimbal->panPositionController.T);
+    printf("  T: %.4f\n", gimbal->panPositionController.T);
     printf("  integrator: %.2f\n", gimbal->panPositionController.integrator);
     printf("  prevError: %.2f\n", gimbal->panPositionController.prevError);
     printf("  differentiator: %.2f\n", gimbal->panPositionController.differentiator);
@@ -87,7 +87,7 @@ void displayGimbal(gimbal_t *gimbal) {
     // printf("  outLimMax: %.2f\n", gimbal->tiltPositionController.outLimMax);
     // printf("  intLimMin: %.2f\n", gimbal->tiltPositionController.intLimMin);
     // printf("  intLimMax: %.2f\n", gimbal->tiltPositionController.intLimMax);
-    // printf("  T: %.2f\n", gimbal->tiltPositionController.T);
+    // printf("  T: %.4f\n", gimbal->tiltPositionController.T);
     // printf("  integrator: %.2f\n", gimbal->tiltPositionController.integrator);
     // printf("  prevError: %.2f\n", gimbal->tiltPositionController.prevError);
     // printf("  differentiator: %.2f\n", gimbal->tiltPositionController.differentiator);
@@ -156,7 +156,7 @@ void displayGimbalConfiguration(gimbal_configuration_t *config) {
     printf("  outLimMax: %.2f\n", config->panPositionController.outLimMax);
     printf("  intLimMin: %.2f\n", config->panPositionController.intLimMin);
     printf("  intLimMax: %.2f\n", config->panPositionController.intLimMax);
-    printf("  T: %.2f\n", config->panPositionController.T);
+    printf("  T: %.4f\n", config->panPositionController.T);
     printf("  integrator: %.2f\n", config->panPositionController.integrator);
     printf("  prevError: %.2f\n", config->panPositionController.prevError);
     printf("  differentiator: %.2f\n", config->panPositionController.differentiator);
@@ -174,7 +174,7 @@ void displayGimbalConfiguration(gimbal_configuration_t *config) {
     // printf("  outLimMax: %.2f\n", config->tiltPositionController.outLimMax);
     // printf("  intLimMin: %.2f\n", config->tiltPositionController.intLimMin);
     // printf("  intLimMax: %.2f\n", config->tiltPositionController.intLimMax);
-    // printf("  T: %.2f\n", config->tiltPositionController.T);
+    // printf("  T: %.4f\n", config->tiltPositionController.T);
     // printf("  integrator: %.2f\n", config->tiltPositionController.integrator);
     // printf("  prevError: %.2f\n", config->tiltPositionController.prevError);
     // printf("  differentiator: %.2f\n", config->tiltPositionController.differentiator);

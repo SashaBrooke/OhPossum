@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "pico/stdlib.h"
 
@@ -100,54 +101,117 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     // ####################################################################################
     
     command_t commands[] = {
+        // General
         {"help", "Show available commands."},
+
+        // Config
         {"config-read", "Display the current gimbal configuration."},
         {"config-save", "Save the current gimbal configuration."},
+
+        // Gimbal
         {"gimbal-read", "Display the current state of the gimbal."},
         {"gimbal-free", "Set the gimbal to free mode."},
         {"gimbal-arm", "Arm the gimbal and set initial pan and tilt setpoints."},
         {"gimbal-stream", "Enable or disable gimbal streaming."},
         {"gimbal-streamrate", "Set the gimbal stream rate."},
         {"gimbal-serialno", "Set the gimbal serial number (limited to uint8 values)."},
-        {"pan-setpos", "Set the pan setpoint."}
-        // pan pid commands
-        // pan encoder offset (offset implementation TODO)
-        // tilt-setpos
-        // tilt pid commands
-        // tilt encoder offset (offset implementation TODO)
+
+        // Pan
+        {"pan-setpos", "Set the pan setpoint."},
+        {"pan-pid-kp", "Set the proportional gain (Kp) for the pan PID controller."},
+        {"pan-pid-ki", "Set the integral gain (Ki) for the pan PID controller."},
+        {"pan-pid-kd", "Set the derivative gain (Kd) for the pan PID controller."},
+        {"pan-pid-tau", "Set the derivative filter coefficient (tau) for the pan PID controller."},
+        {"pan-pid-outLimMin", "Set the lower output limit for the pan PID controller."},
+        {"pan-pid-outLimMax", "Set the upper output limit for the pan PID controller."},
+        {"pan-pid-intLimMin", "Set the lower integrator limit for the pan PID controller."},
+        {"pan-pid-intLimMax", "Set the upper integrator limit for the pan PID controller."},
+        {"pan-pid-revert", "Revert to the last saved pan PID configuration."},
+
+        // // Tilt
+        // {"tilt-setpos", "Set the tilt setpoint."},
+        // {"tilt-pid-kp", "Set the proportional gain (Kp) for the tilt PID controller."},
+        // {"tilt-pid-ki", "Set the integral gain (Ki) for the tilt PID controller."},
+        // {"tilt-pid-kd", "Set the derivative gain (Kd) for the tilt PID controller."},
+        // {"tilt-pid-tau", "Set the derivative filter coefficient (tau) for the tilt PID controller."},
+        // {"tilt-pid-outLimMin", "Set the lower output limit for the tilt PID controller."},
+        // {"tilt-pid-outLimMax", "Set the upper output limit for the tilt PID controller."},
+        // {"tilt-pid-intLimMin", "Set the lower integrator limit for the tilt PID controller."},
+        // {"tilt-pid-intLimMax", "Set the upper integrator limit for the tilt PID controller."},
+        // {"tilt-pid-revert", "Revert to the last saved tilt PID configuration."},
     };
 
     size_t numCommands = sizeof(commands) / sizeof(command_t);
 
     if (strcmp(name, "help") == 0) { // "h" shortcut
-        const int nameWidth = 20;
+        printf("\n");
 
-        // Print out all available commands
+        // Command name and type section formatting
+        const int nameWidth = 20;
+        char currentSection[256] = "";
+
         printf("Available commands:\n");
+
         for (size_t i = 0; i < numCommands; ++i) {
-            printf("  %-*s %s\n", nameWidth, commands[i].name, commands[i].description);
+            char section[256];
+            const char *dashPosition = strchr(commands[i].name, '-');
+
+            if (dashPosition != NULL) {
+                size_t sectionLength = dashPosition - commands[i].name;
+                strncpy(section, commands[i].name, sectionLength);
+                section[sectionLength] = '\0';
+            } else {
+                // If no dash, use "General" as the section
+                strcpy(section, "general");
+            }
+
+            // Print section name if starting to show commands from a new section
+            if (strcmp(currentSection, section) != 0) {
+                currentSection[0] = toupper(section[0]);
+                strcpy(&currentSection[1], &section[1]);
+                printf("  %s\n", currentSection);
+                strcpy(currentSection, section);
+            }
+
+            printf("    %-*s %s\n", nameWidth, commands[i].name, commands[i].description);
         }
+
+        printf("\n");
     }
 
     else if (strcmp(name, "config-read") == 0) { // "cr" shortcut
+        printf("\n");
         displayGimbalConfiguration(config);
     } 
     
     else if (strcmp(name, "config-save") == 0) { // "cs" shortcut
+        printf("\n");
+
+        // Copy current gimbal gains to configuration before being saved
+        config->panPositionController = gimbal->panPositionController;
+        // config->tiltPositionController = gimbal->tiltPositionController;
+
+        // Save configuration
         saveGimbalConfiguration(config);
+        printf("\n");
         gimbal->savedConfiguration = true;
     } 
     
     else if (strcmp(name, "gimbal-read") == 0) { // "gr" shortcut
+        printf("\n");
         displayGimbal(gimbal);
     } 
 
     else if (strcmp(name, "gimbal-free") == 0) { // "free" shortcut
+        printf("\n");
         gimbal->gimbalMode = GIMBAL_MODE_FREE;
         printf("Gimbal disarmed\n");
+        printf("\n");
     }
 
     else if (strcmp(name, "gimbal-arm") == 0) { // "arm" shortcut
+        printf("\n");
+
         // Get current gimbal angles
         uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
         // tilt
@@ -158,9 +222,12 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
 
         gimbal->gimbalMode = GIMBAL_MODE_ARMED;
         printf("Gimbal armed\n");
+        printf("\n");
     } 
 
     else if (strcmp(name, "gimbal-stream") == 0) { // "gs" shortcut
+        printf("\n");
+
         if (valueStr && valueStr[0] != '\0') {
             char *endptr;
             errno = 0;
@@ -176,9 +243,13 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         } else {
             printf("Command 'gimbal-stream' requires a value.\n");
         }
+
+        printf("\n");
     }
 
     else if (strcmp(name, "gimbal-streamrate") == 0) { // "gsr" shortcut
+        printf("\n");
+
         if (valueStr && valueStr[0] != '\0') {
             char *endptr;
             errno = 0;
@@ -195,9 +266,13 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         } else {
             printf("Command 'gimbal-streamrate' requires a value.\n");
         }
+
+        printf("\n");
     }
 
     else if (strcmp(name, "gimbal-serialno") == 0) { // "gsn" shortcut
+        printf("\n");
+
         if (valueStr && valueStr[0] != '\0') {
             char *endptr;
             errno = 0;
@@ -215,38 +290,405 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         } else {
             printf("Command 'gimbal-serialno' requires a value.\n");
         }
+
+        printf("\n");
     }
 
     else if (strcmp(name, "pan-setpos") == 0) { // "ps" shortcut
-    if (valueStr && valueStr[0] != '\0') {
-        char *endptr;
-        errno = 0;
+        printf("\n");
 
-        float value = strtof(valueStr, &endptr);
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
 
-        if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
-            printf("Invalid value for 'pan-setpos'. Setpoint values must be between %u-%u.\n",
-                   AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
+                printf("Invalid value for 'pan-setpos'. Setpoint values must be between %u-%u.\n",
+                    AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+            } else {
+                gimbal->panPositionSetpoint = value;
+                printf("Updated pan setpoint to %f\n", value);
+            }
         } else {
-            gimbal->panPositionSetpoint = value;
-            printf("Updated pan setpoint to %f\n", value);
+            printf("Command 'pan-setpos' requires a value.\n");
         }
-    } else {
-        printf("Command 'pan-setpos' requires a value.\n");
+
+        printf("\n");
     }
-}
 
-    // pan pid commands
+    else if (strcmp(name, "pan-pid-kp") == 0) { // "pkp" shortcut
+        printf("\n");
 
-    // pan encoder offset (offset implementation TODO)
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
 
-    // tilt-setpos
+            float value = strtof(valueStr, &endptr);
 
-    // tilt pid commands
+            if (errno != 0 || *endptr != '\0' || value < 0) {
+                printf("Invalid value for 'pan-pid-kp'. Gain values must be greater than or equal to 0.\n");
+            } else {
+                gimbal->panPositionController.Kp = value;
+                printf("Updated pan Kp gain to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-kp' requires a value.\n");
+        }
 
-    // tilt encoder offset (offset implementation TODO)
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-ki") == 0) { // "pki" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < 0) {
+                printf("Invalid value for 'pan-pid-ki'. Gain values must be greater than or equal to 0.\n");
+            } else {
+                gimbal->panPositionController.Ki = value;
+                printf("Updated pan Ki gain to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-ki' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-kd") == 0) { // "pkd" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < 0) {
+                printf("Invalid value for 'pan-pid-kd'. Gain values must be greater than or equal to 0.\n");
+            } else {
+                gimbal->panPositionController.Kd = value;
+                printf("Updated pan Kd gain to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-kd' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-tau") == 0) { // "ppt" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < 0) {
+                printf("Invalid value for 'pan-pid-tau'. Filter coefficients must be greater than or equal to 0.\n");
+            } else {
+                gimbal->panPositionController.tau = value;
+                printf("Updated pan derivative low pass filter coefficient (tau) to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-tau' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-outLimMin") == 0) { // "polmin" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value > gimbal->panPositionController.outLimMax) {
+                printf("Invalid value for 'pan-pid-outLimMin'. Lower limit must be lower than the upper limit.\n");
+            } else {
+                gimbal->panPositionController.outLimMin = value;
+                printf("Updated pan pid ouput lower limit to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-outLimMin' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-outLimMax") == 0) { // "polmax" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < gimbal->panPositionController.outLimMin) {
+                printf("Invalid value for 'pan-pid-outLimMax'. Upper limit must be higher than the lower limit.\n");
+            } else {
+                gimbal->panPositionController.outLimMax = value;
+                printf("Updated pan pid ouput upper limit to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-outLimMax' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-intLimMin") == 0) { // "pilmin" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value > gimbal->panPositionController.intLimMax) {
+                printf("Invalid value for 'pan-pid-intLimMin'. Lower limit must be lower than the upper limit.\n");
+            } else {
+                gimbal->panPositionController.intLimMin = value;
+                printf("Updated pan pid integrator lower limit to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-intLimMin' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-intLimMax") == 0) { // "pilmax" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            float value = strtof(valueStr, &endptr);
+
+            if (errno != 0 || *endptr != '\0' || value < gimbal->panPositionController.intLimMin) {
+                printf("Invalid value for 'pan-pid-intLimMax'. Upper limit must be higher than the lower limit.\n");
+            } else {
+                gimbal->panPositionController.intLimMax = value;
+                printf("Updated pan pid integrator upper limit to %f\n", value);
+            }
+        } else {
+            printf("Command 'pan-pid-intLimMax' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "pan-pid-revert") == 0) { // "ppr" shortcut
+        printf("\n");
+        gimbal->panPositionController = config->panPositionController;
+        printf("Reverted back to last saved pan controller configuration\n");
+        printf("\n");
+    }
+
+    // else if (strcmp(name, "tilt-setpos") == 0) { // "ts" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
+    //             printf("Invalid value for 'tilt-setpos'. Setpoint values must be between %u-%u.\n",
+    //                 AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+    //         } else {
+    //             gimbal->tiltPositionSetpoint = value;
+    //             printf("Updated tilt setpoint to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-setpos' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-kp") == 0) { // "tkp" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < 0) {
+    //             printf("Invalid value for 'tilt-pid-kp'. Gain values must be greater than or equal to 0.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.Kp = value;
+    //             printf("Updated tilt Kp gain to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-kp' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-ki") == 0) { // "tki" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < 0) {
+    //             printf("Invalid value for 'tilt-pid-ki'. Gain values must be greater than or equal to 0.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.Ki = value;
+    //             printf("Updated tilt Ki gain to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-ki' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-kd") == 0) { // "tkd" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < 0) {
+    //             printf("Invalid value for 'tilt-pid-kd'. Gain values must be greater than or equal to 0.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.Kd = value;
+    //             printf("Updated tilt Kd gain to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-kd' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-tau") == 0) { // "tpt" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < 0) {
+    //             printf("Invalid value for 'tilt-pid-tau'. Filter coefficients must be greater than or equal to 0.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.tau = value;
+    //             printf("Updated tilt derivative low pass filter coefficient (tau) to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-tau' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-outLimMin") == 0) { // "tolmin" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value > gimbal->tiltPositionController.outLimMax) {
+    //             printf("Invalid value for 'tilt-pid-outLimMin'. Lower limit must be lower than the upper limit.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.outLimMin = value;
+    //             printf("Updated tilt pid output lower limit to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-outLimMin' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-outLimMax") == 0) { // "tolmax" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < gimbal->tiltPositionController.outLimMin) {
+    //             printf("Invalid value for 'tilt-pid-outLimMax'. Upper limit must be higher than the lower limit.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.outLimMax = value;
+    //             printf("Updated tilt pid output upper limit to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-outLimMax' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-intLimMin") == 0) { // "tilmin" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value > gimbal->tiltPositionController.intLimMax) {
+    //             printf("Invalid value for 'tilt-pid-intLimMin'. Lower limit must be lower than the upper limit.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.intLimMin = value;
+    //             printf("Updated tilt pid integrator lower limit to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-intLimMin' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-intLimMax") == 0) { // "tilmax" shortcut
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         float value = strtof(valueStr, &endptr);
+
+    //         if (errno != 0 || *endptr != '\0' || value < gimbal->tiltPositionController.intLimMin) {
+    //             printf("Invalid value for 'tilt-pid-intLimMax'. Upper limit must be higher than the lower limit.\n");
+    //         } else {
+    //             gimbal->tiltPositionController.intLimMax = value;
+    //             printf("Updated tilt pid integrator upper limit to %f\n", value);
+    //         }
+    //     } else {
+    //         printf("Command 'tilt-pid-intLimMax' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "tilt-pid-revert") == 0) { // "tpr" shortcut
+    //     gimbal->tiltPositionController = config->tiltPositionController;
+    //     printf("Reverted back to last saved tilt controller configuration\n");
+    //     printf("\n");
+    // }
     
     else {
         printf("Unknown command: '%s'\n", name);
+        printf("\n");
     }
 }

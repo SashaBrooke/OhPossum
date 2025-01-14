@@ -1,5 +1,5 @@
 # Ignore all files in software build directories
-software/pico/build/
+software/control_system/build/
 
 # Ignore IDE settings
 .vscode/

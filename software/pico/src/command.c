@@ -330,6 +330,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-kp'. Gain values must be greater than or equal to 0.\n");
             } else {
                 gimbal->panPositionController.Kp = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan Kp gain to %f\n", value);
             }
         } else {
@@ -352,6 +353,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-ki'. Gain values must be greater than or equal to 0.\n");
             } else {
                 gimbal->panPositionController.Ki = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan Ki gain to %f\n", value);
             }
         } else {
@@ -374,6 +376,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-kd'. Gain values must be greater than or equal to 0.\n");
             } else {
                 gimbal->panPositionController.Kd = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan Kd gain to %f\n", value);
             }
         } else {
@@ -396,6 +399,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-tau'. Filter coefficients must be greater than or equal to 0.\n");
             } else {
                 gimbal->panPositionController.tau = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan derivative low pass filter coefficient (tau) to %f\n", value);
             }
         } else {
@@ -418,6 +422,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-outLimMin'. Lower limit must be lower than the upper limit.\n");
             } else {
                 gimbal->panPositionController.outLimMin = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan pid ouput lower limit to %f\n", value);
             }
         } else {
@@ -440,6 +445,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-outLimMax'. Upper limit must be higher than the lower limit.\n");
             } else {
                 gimbal->panPositionController.outLimMax = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan pid ouput upper limit to %f\n", value);
             }
         } else {
@@ -462,6 +468,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-intLimMin'. Lower limit must be lower than the upper limit.\n");
             } else {
                 gimbal->panPositionController.intLimMin = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan pid integrator lower limit to %f\n", value);
             }
         } else {
@@ -484,6 +491,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
                 printf("Invalid value for 'pan-pid-intLimMax'. Upper limit must be higher than the lower limit.\n");
             } else {
                 gimbal->panPositionController.intLimMax = value;
+                gimbal->savedConfiguration = false;
                 printf("Updated pan pid integrator upper limit to %f\n", value);
             }
         } else {
@@ -512,6 +520,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //                 AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
     //         } else {
     //             gimbal->tiltPositionSetpoint = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt setpoint to %f\n", value);
     //         }
     //     } else {
@@ -532,6 +541,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-kp'. Gain values must be greater than or equal to 0.\n");
     //         } else {
     //             gimbal->tiltPositionController.Kp = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt Kp gain to %f\n", value);
     //         }
     //     } else {
@@ -552,6 +562,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-ki'. Gain values must be greater than or equal to 0.\n");
     //         } else {
     //             gimbal->tiltPositionController.Ki = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt Ki gain to %f\n", value);
     //         }
     //     } else {
@@ -572,6 +583,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-kd'. Gain values must be greater than or equal to 0.\n");
     //         } else {
     //             gimbal->tiltPositionController.Kd = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt Kd gain to %f\n", value);
     //         }
     //     } else {
@@ -592,6 +604,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-tau'. Filter coefficients must be greater than or equal to 0.\n");
     //         } else {
     //             gimbal->tiltPositionController.tau = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt derivative low pass filter coefficient (tau) to %f\n", value);
     //         }
     //     } else {
@@ -612,6 +625,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-outLimMin'. Lower limit must be lower than the upper limit.\n");
     //         } else {
     //             gimbal->tiltPositionController.outLimMin = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt pid output lower limit to %f\n", value);
     //         }
     //     } else {
@@ -632,6 +646,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-outLimMax'. Upper limit must be higher than the lower limit.\n");
     //         } else {
     //             gimbal->tiltPositionController.outLimMax = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt pid output upper limit to %f\n", value);
     //         }
     //     } else {
@@ -652,6 +667,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-intLimMin'. Lower limit must be lower than the upper limit.\n");
     //         } else {
     //             gimbal->tiltPositionController.intLimMin = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt pid integrator lower limit to %f\n", value);
     //         }
     //     } else {
@@ -672,6 +688,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     //             printf("Invalid value for 'tilt-pid-intLimMax'. Upper limit must be higher than the lower limit.\n");
     //         } else {
     //             gimbal->tiltPositionController.intLimMax = value;
+    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt pid integrator upper limit to %f\n", value);
     //         }
     //     } else {

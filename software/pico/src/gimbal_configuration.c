@@ -17,20 +17,34 @@
 #define FLASH_TARGET_OFFSET (256 * 1024) // Choosing to start at 256K
 
 //  DEFAULT GIMBAL VALUES
-const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE         = GIMBAL_MODE_FREE; // Safety: Force into free mode on powerup
-const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG = true;             // No new settings to be saved on setup
-const bool           GIMBAL_DEFAULT_STREAMING_STATUS  = true;             // May want to change startup behaviour later
-const int            GIMBAL_SLOW_STREAM_RATE          = 10000;  
-const int            GIMBAL_FAST_STREAM_RATE          = 1;
+const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG        = true;             // No new settings to save on setup
+const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE; // Safety: Force free mode on powerup
+const float          GIMBAL_DEFAULT_AXIS_SETPOINT            = 0.0f;
+const bool           GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS  = true;
+const int            GIMBAL_SLOW_STREAM_RATE                 = 10000;  
+const int            GIMBAL_FAST_STREAM_RATE                 = 1;
+const bool           GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS   = true;            // Must manually add desired packets
 
 static gimbal_configuration_t gc;
 
 /* Set up gimbal with default settings */
 void setupGimbal(gimbal_t *gimbal) {
-    gimbal->gimbalMode = GIMBAL_DEFAULT_SAFE_MODE;
     gimbal->savedConfiguration = GIMBAL_DEFAULT_SAVED_CONFIG_FLAG;
-    gimbal->streaming = GIMBAL_DEFAULT_STREAMING_STATUS;
+
+    gimbal->gimbalMode = GIMBAL_DEFAULT_SAFE_MODE;
+
+    gimbal->panPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
+    // gimbal->tiltPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
+
+    gimbal->streaming = GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS;
     gimbal->streamRate = GIMBAL_SLOW_STREAM_RATE; 
+
+    gimbal->panPositionStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    gimbal->panPidStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    gimbal->panMotorStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    // gimbal->tiltPositionStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    // gimbal->tiltPidStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    // gimbal->tiltMotorStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
 }
 
 /* Display gimbal settings */

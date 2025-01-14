@@ -37,19 +37,33 @@ typedef enum {
  * @brief Represents the runtime state of the gimbal.
  */
 typedef struct {
+    // Saved flag
     bool savedConfiguration;
 
+    // Operational mode
     gimbal_mode_t gimbalMode;
 
+    // Axis setpoints
     float panPositionSetpoint;
     // float tiltPositionSetpoint;
 
+    // Global stream
     bool streaming;
     int streamRate;
 
+    // Specific streams
+    bool panPositionStream;
+    bool panPidStream;
+    bool panMotorStream;
+    // bool tiltPositionStream;
+    // bool tiltPidStream;
+    // bool tiltMotorStream;
+
+    // Axis PID controllers
     volatile PID_t panPositionController;
     // PID_t tiltPositionController;
 
+    // Axis encoders
     volatile AS5600_t panEncoder;
     // AS5600_t tiltEncoder;
 } gimbal_t;

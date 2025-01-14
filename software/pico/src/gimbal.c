@@ -247,7 +247,27 @@ int main() {
 
     while(true) {
         if (gimbal.streaming && printFlag) {
-            printf("%u,%f,%u,%f\n", panPos, panMotor, panDir, gimbal.panPositionSetpoint);
+            // Handle specific stream outputs
+            if (gimbal.panPositionStream) {
+                printf("%u,", panPos);
+                
+                if (gimbal.gimbalMode == GIMBAL_MODE_ARMED) {
+                    printf("%f,", gimbal.panPositionSetpoint);
+                }
+            }
+            if (gimbal.panPidStream) {
+                printf("%f,%f,%f,%f,",
+                    gimbal.panPositionController.prevError, // Actually the error from the current controls loop
+                    gimbal.panPositionController.integrator,
+                    gimbal.panPositionController.differentiator,
+                    gimbal.panPositionController.output
+                );
+            }
+            if (gimbal.panMotorStream) {
+                printf("%f,%u,", panMotor, panDir);
+            }
+            printf("\n");
+
             printFlag = false;  /**< Reset print flag */
         }
 

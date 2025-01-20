@@ -112,9 +112,17 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         {"gimbal-read", "Display the current state of the gimbal."},
         {"gimbal-free", "Set the gimbal to free mode."},
         {"gimbal-arm", "Arm the gimbal and set initial pan and tilt setpoints."},
-        {"gimbal-stream", "Enable or disable gimbal streaming."},
-        {"gimbal-streamrate", "Set the gimbal stream rate."},
         {"gimbal-serialno", "Set the gimbal serial number (limited to uint8 values)."},
+
+        // Stream
+        {"stream-rate", "Set the global stream rate."},
+        {"stream-global", "Enable or disable streaming (global)."},
+        {"stream-pan-pos", "Enable or disable pan position streaming."},
+        {"stream-pan-pid", "Enable or disable pan PID streaming."},
+        {"stream-pan-motor", "Enable or disable pan motor streaming."},
+        // {"stream-tilt-pos", "Enable or disable tilt position streaming."},
+        // {"stream-tilt-pid", "Enable or disable tilt PID streaming."},
+        // {"stream-tilt-motor", "Enable or disable tilt motor streaming."},
 
         // Pan
         {"pan-setpos", "Set the pan setpoint."},
@@ -223,51 +231,6 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         gimbal->gimbalMode = GIMBAL_MODE_ARMED;
         printf("Gimbal armed\n");
         printf("\n");
-    } 
-
-    else if (strcmp(name, "gimbal-stream") == 0) { // "gs" shortcut
-        printf("\n");
-
-        if (valueStr && valueStr[0] != '\0') {
-            char *endptr;
-            errno = 0;
-
-            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
-
-            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
-                printf("Invalid value for 'gimbal-stream'. Use 0 (false) or 1 (true).\n");
-            } else {
-                gimbal->streaming = (bool)value;
-                printf("%s streaming\n", value ? "Enabled" : "Disabled");
-            }
-        } else {
-            printf("Command 'gimbal-stream' requires a value.\n");
-        }
-
-        printf("\n");
-    }
-
-    else if (strcmp(name, "gimbal-streamrate") == 0) { // "gsr" shortcut
-        printf("\n");
-
-        if (valueStr && valueStr[0] != '\0') {
-            char *endptr;
-            errno = 0;
-
-            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
-
-            if (errno != 0 || *endptr != '\0' || value < GIMBAL_FAST_STREAM_RATE || value > GIMBAL_SLOW_STREAM_RATE) {
-                printf("Invalid value for 'gimbal-streamrate'. Use a value between %d-%d.\n",
-                    GIMBAL_FAST_STREAM_RATE, GIMBAL_SLOW_STREAM_RATE);
-            } else {
-                gimbal->streamRate = (int)value;
-                printf("Updated stream rate to %d\n", (int)value);
-            }
-        } else {
-            printf("Command 'gimbal-streamrate' requires a value.\n");
-        }
-
-        printf("\n");
     }
 
     else if (strcmp(name, "gimbal-serialno") == 0) { // "gsn" shortcut
@@ -293,6 +256,183 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
 
         printf("\n");
     }
+
+    else if (strcmp(name, "stream-rate") == 0) { // "sr" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || value < GIMBAL_FAST_STREAM_RATE || value > GIMBAL_SLOW_STREAM_RATE) {
+                printf("Invalid value for 'stream-rate'. Use a value between %d-%d.\n",
+                    GIMBAL_FAST_STREAM_RATE, GIMBAL_SLOW_STREAM_RATE);
+            } else {
+                gimbal->streamRate = (int)value;
+                printf("Updated global stream rate to %d\n", (int)value);
+            }
+        } else {
+            printf("Command 'stream-rate' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "stream-global") == 0) { // "sg" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+                printf("Invalid value for 'stream-global'. Use 0 (false) or 1 (true).\n");
+            } else {
+                gimbal->streaming = (bool)value;
+                printf("%s streaming (global)\n", value ? "Enabled" : "Disabled");
+            }
+        } else {
+            printf("Command 'stream-global' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "stream-pan-pos") == 0) { // "gsppos" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+                printf("Invalid value for 'stream-pan-pos'. Use 0 (false) or 1 (true).\n");
+            } else {
+                gimbal->panPositionStream = (bool)value;
+                printf("%s pan position streaming\n", value ? "Enabled" : "Disabled");
+            }
+        } else {
+            printf("Command 'stream-pan-pos' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "stream-pan-pid") == 0) { // "gsppid" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+                printf("Invalid value for 'stream-pan-pid'. Use 0 (false) or 1 (true).\n");
+            } else {
+                gimbal->panPositionStream = (bool)value;
+                printf("%s pan pid streaming\n", value ? "Enabled" : "Disabled");
+            }
+        } else {
+            printf("Command 'stream-pan-pid' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    else if (strcmp(name, "stream-pan-motor") == 0) { // "gspm" shortcut
+        printf("\n");
+
+        if (valueStr && valueStr[0] != '\0') {
+            char *endptr;
+            errno = 0;
+
+            long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+            if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+                printf("Invalid value for 'stream-pan-motor'. Use 0 (false) or 1 (true).\n");
+            } else {
+                gimbal->panPositionStream = (bool)value;
+                printf("%s pan motor streaming\n", value ? "Enabled" : "Disabled");
+            }
+        } else {
+            printf("Command 'stream-pan-motor' requires a value.\n");
+        }
+
+        printf("\n");
+    }
+
+    // else if (strcmp(name, "stream-tilt-pos") == 0) { // "gsppos" shortcut
+    //     printf("\n");
+
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+    //         if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+    //             printf("Invalid value for 'stream-tilt-pos'. Use 0 (false) or 1 (true).\n");
+    //         } else {
+    //             gimbal->panPositionStream = (bool)value;
+    //             printf("%s tilt position streaming\n", value ? "Enabled" : "Disabled");
+    //         }
+    //     } else {
+    //         printf("Command 'stream-tilt-pos' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "stream-tilt-pid") == 0) { // "gsppid" shortcut
+    //     printf("\n");
+
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+    //         if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+    //             printf("Invalid value for 'stream-tilt-pid'. Use 0 (false) or 1 (true).\n");
+    //         } else {
+    //             gimbal->panPositionStream = (bool)value;
+    //             printf("%s tilt pid streaming\n", value ? "Enabled" : "Disabled");
+    //         }
+    //     } else {
+    //         printf("Command 'stream-tilt-pid' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
+
+    // else if (strcmp(name, "stream-tilt-motor") == 0) { // "gspm" shortcut
+    //     printf("\n");
+
+    //     if (valueStr && valueStr[0] != '\0') {
+    //         char *endptr;
+    //         errno = 0;
+
+    //         long value = strtol(valueStr, &endptr, DECIMAL_BASE);
+
+    //         if (errno != 0 || *endptr != '\0' || (value != 0 && value != 1)) {
+    //             printf("Invalid value for 'stream-tilt-motor'. Use 0 (false) or 1 (true).\n");
+    //         } else {
+    //             gimbal->panPositionStream = (bool)value;
+    //             printf("%s tilt motor streaming\n", value ? "Enabled" : "Disabled");
+    //         }
+    //     } else {
+    //         printf("Command 'stream-tilt-motor' requires a value.\n");
+    //     }
+
+    //     printf("\n");
+    // }
 
     else if (strcmp(name, "pan-setpos") == 0) { // "ps" shortcut
         printf("\n");

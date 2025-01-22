@@ -18,7 +18,7 @@
 
 //  DEFAULT GIMBAL VALUES
 const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG        = true;             // No new settings to save on setup
-const gimbal_mode_t  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE; // Safety: Force free mode on powerup
+const gimbal_mode_e  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE; // Safety: Force free mode on powerup
 const float          GIMBAL_DEFAULT_AXIS_SETPOINT            = 0.0f;
 const bool           GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS  = true;
 const int            GIMBAL_SLOW_STREAM_RATE                 = 10000;  

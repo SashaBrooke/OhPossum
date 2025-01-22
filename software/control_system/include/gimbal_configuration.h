@@ -22,7 +22,7 @@ extern const int GIMBAL_SLOW_STREAM_RATE;
 extern const int GIMBAL_FAST_STREAM_RATE;
 
 /**
- * @enum gimbal_mode_t
+ * @enum gimbal_mode_e
  * @brief Operational modes for the gimbal.
  */
 typedef enum {
@@ -30,7 +30,7 @@ typedef enum {
     GIMBAL_MODE_FREE,
     GIMBAL_MODE_ARMED,
     GIMBAL_MODE_UPPER_LIMIT
-} gimbal_mode_t;
+} gimbal_mode_e;
 
 /**
  * @struct gimbal_t
@@ -41,7 +41,7 @@ typedef struct {
     bool savedConfiguration;
 
     // Operational mode
-    gimbal_mode_t gimbalMode;
+    gimbal_mode_e gimbalMode;
 
     // Axis setpoints
     float panPositionSetpoint;

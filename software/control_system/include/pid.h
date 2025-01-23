@@ -69,6 +69,13 @@ PID_t PID_setup(float Kp, float Ki, float Kd, float tau, float outLimMin,
                 float T, float maxMeasurement);
 
 /**
+ * @brief Resets PID saved state parameters to their defaults (0).
+ * 
+ * @param pid Pointer to the PID controller structure.
+ */
+void PID_reset(volatile PID_t *pid);
+
+/**
  * @brief Updates the PID controller and computes a new output.
  *
  * @param pid Pointer to the PID controller structure.

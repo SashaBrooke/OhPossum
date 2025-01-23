@@ -45,6 +45,14 @@ PID_t PID_setup(float Kp, float Ki, float Kd, float tau,
     return pid;
 }
 
+/* Reset PID saved state parameters */
+void PID_reset(volatile PID_t *pid) {
+    pid->integrator = 0.0f;
+    pid->prevError = 0.0f;
+    pid->differentiator = 0.0f;
+    pid->prevMeasurement = 0.0f;
+}
+
 /* Update the PID controller */
 float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
     // Error signal

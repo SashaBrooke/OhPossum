@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 #include "pico/stdlib.h" 
 #include "hardware/pwm.h"
@@ -23,23 +24,27 @@
 #define SECS2USECS(secs)  ((secs) * 1000000)                     // Converts a time from seconds to micro-seconds
 
 // Pan hardware
-#define PAN_I2C_PORT        i2c0
-#define PAN_I2C_SDA_PIN     4
-#define PAN_I2C_SCL_PIN     5
-#define PAN_ENC_DIR_PIN     3
-#define PAN_PWM_PIN         6
-#define PAN_MOTOR_DIR_PIN   8
+#define PAN_I2C_PORT         i2c0
+#define PAN_I2C_SDA_PIN      4
+#define PAN_I2C_SCL_PIN      5
+#define PAN_ENC_DIR_PIN      3
+#define PAN_PWM_PIN          6
+#define PAN_MOTOR_DIR_PIN    8
+#define PAN_LOWER_LIMIT_PIN  17
+#define PAN_UPPER_LIMIT_PIN  16
 
 // // Tilt hardware
-// #define TILT_I2C_PORT       i2c1
-// #define TILT_I2C_SDA_PIN    10
-// #define TILT_I2C_SCL_PIN    11
-// #define TILT_ENC_DIR_PIN    12
-// #define TILT_PWM_PIN        7
-// #define TILT_MOTOR_DIR_PIN  9
+// #define TILT_I2C_PORT         i2c1
+// #define TILT_I2C_SDA_PIN      10
+// #define TILT_I2C_SCL_PIN      11
+// #define TILT_ENC_DIR_PIN      12
+// #define TILT_PWM_PIN          7
+// #define TILT_MOTOR_DIR_PIN    9
+// #define TILT_LOWER_LIMIT_PIN  14
+// #define TILT_UPPER_LIMIT_PIN  15
 
 // Debug hardware
-#define TEST_PIN 0
+#define TEST_PIN 22
 
 // PWM settings
 #define PWM_TOP_REG 100
@@ -47,6 +52,10 @@
 
 // Controls loop frequency
 #define CONTROLS_FREQ 1000
+
+// Homing
+#define HOMING_SPEED 0.1
+#define HOMING_DISTANCE 40
 
 // Stream variables
 volatile uint16_t panPos = 0;
@@ -99,10 +108,100 @@ void setupGPIO() {
     // gpio_set_dir(TILT_MOTOR_DIR_PIN, GPIO_OUT);
     // gpio_put(TILT_MOTOR_DIR_PIN, 0);  /**< Default LOW, just be explicit */
 
+    // Configure limit switch pins
+    gpio_init(PAN_LOWER_LIMIT_PIN);
+    gpio_set_dir(PAN_LOWER_LIMIT_PIN, GPIO_IN);
+    gpio_pull_up(PAN_LOWER_LIMIT_PIN);
+
+    gpio_init(PAN_UPPER_LIMIT_PIN);
+    gpio_set_dir(PAN_UPPER_LIMIT_PIN, GPIO_IN);
+    gpio_pull_up(PAN_UPPER_LIMIT_PIN);
+
+    // gpio_init(TILT_LOWER_LIMIT_PIN);
+    // gpio_set_dir(TILT_LOWER_LIMIT_PIN, GPIO_IN);
+    // gpio_pull_up(TILT_LOWER_LIMIT_PIN);
+
+    // gpio_init(TILT_UPPER_LIMIT_PIN);
+    // gpio_set_dir(TILT_UPPER_LIMIT_PIN, GPIO_IN);
+    // gpio_pull_up(TILT_UPPER_LIMIT_PIN);
+
     // Configure debugging pin
     gpio_init(TEST_PIN);
     gpio_set_dir(TEST_PIN, GPIO_OUT);
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
+}
+
+void setupAxisLimits(gimbal_t *gimbal) {
+    // Arm gimbal
+    gimbal->panPositionSetpoint = (float)panPos;
+    // uint16_t tiltStartPos = AS5600_getRawAngle(&gimbal->tiltEncoder);
+    // gimbal->tiltPositionSetpoint = (float)tiltStartPos;
+    gimbal->gimbalMode = GIMBAL_MODE_ARMED;
+
+    // Find pan lower limit
+    while (true) {
+        bool atPanLowerLimit = !gpio_get(PAN_LOWER_LIMIT_PIN); // Pulled high default (therefore !)
+
+        if (atPanLowerLimit) {
+            gimbal->panLowerLimit = (float)panPos; // + some safe offset
+            printf("#### Lower limit set at %.1f ####\n", gimbal->panLowerLimit);
+            // gimbal->panEncoder.offset = gimbal->panLowerLimit;
+            break;
+        } else {
+            float newPanSetpoint = gimbal->panPositionSetpoint - HOMING_SPEED;
+            gimbal->panPositionSetpoint = newPanSetpoint >= 0 ? newPanSetpoint : newPanSetpoint + AS5600_RAW_ANGLE_MAX;
+            printf("Now at: %.1f\n", gimbal->panPositionSetpoint); // Hacky
+        }
+    }
+
+    sleep_ms(1000);
+
+    // Find pan upper limit
+    while (true) {
+        bool atPanUpperLimit = !gpio_get(PAN_LOWER_LIMIT_PIN); // Pulled high default (therefore !)
+
+        int iter = 0;
+
+        if (atPanUpperLimit || (panPos == gimbal->panLowerLimit && iter > 0)) {
+            gimbal->panUpperLimit = (float)panPos; // + some safe offset
+            printf("#### Upper limit set at %.1f ####\n", gimbal->panUpperLimit);
+            break;
+        } else {
+            float newPanSetpoint = gimbal->panPositionSetpoint + HOMING_SPEED;
+            iter++;
+            gimbal->panPositionSetpoint = newPanSetpoint <= AS5600_RAW_ANGLE_MAX ? newPanSetpoint : newPanSetpoint - AS5600_RAW_ANGLE_MAX;
+            printf("Now at: %.1f\n", gimbal->panPositionSetpoint); // Hacky
+        }
+    }
+
+    sleep_ms(1000);
+
+    // Move to a central position
+    float panMidpoint;
+    if (gimbal->panLowerLimit < gimbal->panUpperLimit) {
+        panMidpoint = (gimbal->panLowerLimit + gimbal->panUpperLimit) / 2;
+    } else {
+        panMidpoint = fmod(gimbal->panLowerLimit + (AS5600_RAW_ANGLE_MAX + gimbal->panUpperLimit - gimbal->panLowerLimit) / 2, AS5600_RAW_ANGLE_MAX);
+    }
+    gimbal->panPositionSetpoint = panMidpoint >= 0 ? panMidpoint : panMidpoint + AS5600_RAW_ANGLE_MAX;
+    printf("Midpoint: %.0f\n", gimbal->panPositionSetpoint);
+
+    while (true) {
+        if (fabs((float)panPos - panMidpoint) < HOMING_DISTANCE) {
+            printf("At midpoint (%u actual vs %.1f setpoint)\n", panPos, panMidpoint);
+
+            sleep_ms(500); // Pause at midpoint
+
+            // Disarm
+            gimbal->gimbalMode = GIMBAL_MODE_FREE;
+            PID_reset(&gimbal->panPositionController);
+            break;
+        } else {
+            printf("Moving to midpoint: at %u\n", panPos); // Hacky
+        }
+    }
+
+    // Tilt implementation
 }
 
 /**
@@ -131,6 +230,12 @@ bool updateMotors(repeating_timer_t *timer) {
 
         panMotor = panPwmDutyCycle;
         panDir = panDirection;
+    } else if (gimbal->gimbalMode = GIMBAL_MODE_FREE) {
+        gpio_put(PAN_MOTOR_DIR_PIN, 0); // default dir
+        pwm_set_gpio_level(PAN_PWM_PIN, 0); // default pwm
+
+        panMotor = 0;
+        panDir = 0;
     }
 
     // Tilt
@@ -240,6 +345,10 @@ int main() {
     printf("Starting controls loop\n");
     repeating_timer_t timer; // Consider using real time clock peripheral if for use longer than ~72 mins
     add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, &gimbal, &timer);
+
+    sleep_ms(1000);
+    setupAxisLimits(&gimbal);
+    sleep_ms(1000);
 
     // Enable serial commands
     resetSerialCommandInput();

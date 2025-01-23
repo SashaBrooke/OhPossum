@@ -220,13 +220,24 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     else if (strcmp(name, "gimbal-arm") == 0) { // "arm" shortcut
         printf("\n");
 
-        // Get current gimbal angles
-        uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
-        // tilt
+        if (gimbal->panLowerLimit == GIMBAL_DEFAULT_SENTINEL || gimbal->panUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+            printf("Pan axis limits are unset. Cannot arm.\n");
+            printf("\n");
+            return;
+        }
+        // if (gimbal->tiltLowerLimit == GIMBAL_DEFAULT_SENTINEL || gimbal->tiltUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+        //     printf("Tilt axis limits are unset. Cannot arm.\n");
+        //     printf("\n");
+        //     return;
+        // }
 
-        // Set setpoint for each axis to the current angle of that axis (smooth arming)
+        // Get current gimbal angles and set setpoint for each axis to the current angle of that axis (smooth arming)
+        uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
+        // If not in the allowed range (between setpoints)
         gimbal->panPositionSetpoint = (float)panRawAngle;
-        // tilt
+        // uint16_t tiltRawAngle = AS5600_getRawAngle(&gimbal->tiltEncoder);
+        // If not in the allowed range (between setpoints)
+        // gimbal->tiltPositionSetpoint = (float)tiltRawAngle;
 
         gimbal->gimbalMode = GIMBAL_MODE_ARMED;
         printf("Gimbal armed\n");

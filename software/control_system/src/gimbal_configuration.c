@@ -19,7 +19,8 @@
 //  DEFAULT GIMBAL VALUES
 const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG        = true;             // No new settings to save on setup
 const gimbal_mode_e  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE; // Safety: Force free mode on powerup
-const float          GIMBAL_DEFAULT_AXIS_SETPOINT            = 0.0f;
+const float          GIMBAL_DEFAULT_AXIS_SETPOINT            = GIMBAL_DEFAULT_SENTINEL;
+const float          GIMBAL_DEFAULT_AXIS_SOFT_LIMIT          = GIMBAL_DEFAULT_SENTINEL;
 const bool           GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS  = true;
 const int            GIMBAL_SLOW_STREAM_RATE                 = 10000;  
 const int            GIMBAL_FAST_STREAM_RATE                 = 1;
@@ -35,6 +36,11 @@ void setupGimbal(gimbal_t *gimbal) {
 
     gimbal->panPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
     // gimbal->tiltPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
+
+    gimbal->panLowerLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
+    gimbal->panUpperLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
+    // gimbal->tiltLowerLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
+    // gimbal->tiltUpperLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
 
     gimbal->streaming = GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS;
     gimbal->streamRate = GIMBAL_SLOW_STREAM_RATE; 

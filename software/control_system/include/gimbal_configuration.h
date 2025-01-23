@@ -14,8 +14,11 @@
 #include "as5600.h"
 
 // Gimbal serial number is restricted to a uint8 for now
-#define GIMBAL_SERIAL_NUMBER_MIN 0
-#define GIMBAL_SERIAL_NUMBER_MAX 255
+#define GIMBAL_SERIAL_NUMBER_MIN  0
+#define GIMBAL_SERIAL_NUMBER_MAX  255
+
+// Invalid or unset default value
+#define GIMBAL_DEFAULT_SENTINEL  (-1)
 
 // Streaming rate range
 extern const int GIMBAL_SLOW_STREAM_RATE;
@@ -46,6 +49,12 @@ typedef struct {
     // Axis setpoints
     float panPositionSetpoint;
     // float tiltPositionSetpoint;
+
+    // Axis soft limits
+    float panLowerLimit;
+    float panUpperLimit;
+    // float tiltLowerLimit;
+    // float tiltUpperLimit;
 
     // Global stream
     bool streaming;

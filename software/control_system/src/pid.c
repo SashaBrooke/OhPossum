@@ -51,6 +51,7 @@ void PID_reset(volatile PID_t *pid) {
     pid->prevError = 0.0f;
     pid->differentiator = 0.0f;
     pid->prevMeasurement = 0.0f;
+    pid->outLimMax = 0.0f;
 }
 
 /* Update the PID controller */

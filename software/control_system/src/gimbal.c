@@ -131,6 +131,9 @@ void setupGPIO() {
     gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
 }
 
+/**
+ * @brief Set soft limits for each gimbal axis.
+ */
 void setupAxisLimits(gimbal_t *gimbal) {
     // Arm gimbal
     gimbal->panPositionSetpoint = (float)panPos;

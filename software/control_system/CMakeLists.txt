@@ -27,6 +27,7 @@ target_link_libraries(ohpossum-controls
     hardware_pwm
     hardware_flash
     hardware_sync
+    hardware_timer
 )
 
 target_include_directories(ohpossum-controls 

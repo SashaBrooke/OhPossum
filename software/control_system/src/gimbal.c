@@ -14,6 +14,7 @@
 #include "hardware/pwm.h"
 #include "hardware/i2c.h"
 #include "hardware/sync.h" 
+#include "hardware/timer.h"
 
 #include "pid.h"
 #include "as5600.h"
@@ -54,8 +55,9 @@
 #define CONTROLS_FREQ 1000
 
 // Homing
-#define HOMING_SPEED 0.1
-#define HOMING_DISTANCE 40
+#define HOMING_SPEED 0.1    // (angular position / second)
+#define HOMING_DISTANCE 40  // (angular position)
+#define HOMING_TIMEOUT 10   // (seconds)
 
 // Stream variables
 volatile uint16_t panPos = 0;
@@ -135,6 +137,8 @@ void setupGPIO() {
  * @brief Set soft limits for each gimbal axis.
  */
 void setupAxisLimits(gimbal_t *gimbal) {
+    uint64_t startTime = time_us_64();
+
     // Arm gimbal
     gimbal->panPositionSetpoint = (float)panPos;
     // uint16_t tiltStartPos = AS5600_getRawAngle(&gimbal->tiltEncoder);
@@ -145,6 +149,12 @@ void setupAxisLimits(gimbal_t *gimbal) {
     while (true) {
         bool atPanLowerLimit = !gpio_get(PAN_LOWER_LIMIT_PIN); // Pulled high default (therefore !)
 
+        if (time_us_64() - startTime >= SECS2USECS(HOMING_TIMEOUT)) {
+            printf("Timeout: Homing process exceeded time limit. Exiting homing process.\n");
+            gimbal->gimbalMode = GIMBAL_MODE_FREE;
+            return;
+        }
+
         if (atPanLowerLimit) {
             gimbal->panLowerLimit = (float)panPos; // + some safe offset
             printf("#### Lower limit set at %.1f ####\n", gimbal->panLowerLimit);
@@ -153,27 +163,31 @@ void setupAxisLimits(gimbal_t *gimbal) {
         } else {
             float newPanSetpoint = gimbal->panPositionSetpoint - HOMING_SPEED;
             gimbal->panPositionSetpoint = newPanSetpoint >= 0 ? newPanSetpoint : newPanSetpoint + AS5600_RAW_ANGLE_MAX;
-            printf("Now at: %.1f\n", gimbal->panPositionSetpoint); // Hacky
+            printf("Moving to lower pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
         }
     }
 
     sleep_ms(1000);
 
     // Find pan upper limit
+    int iter = 0;
     while (true) {
-        bool atPanUpperLimit = !gpio_get(PAN_LOWER_LIMIT_PIN); // Pulled high default (therefore !)
+        bool atPanUpperLimit = !gpio_get(PAN_UPPER_LIMIT_PIN); // Pulled high default (therefore !)
 
-        int iter = 0;
+        if (time_us_64() - startTime >= SECS2USECS(HOMING_TIMEOUT)) {
+            printf("Timeout: Homing process exceeded time limit. Exiting homing process.\n");
+            gimbal->gimbalMode = GIMBAL_MODE_FREE;
+            return;
+        }
 
-        if (atPanUpperLimit || (panPos == gimbal->panLowerLimit && iter > 0)) {
+        if (atPanUpperLimit) {
             gimbal->panUpperLimit = (float)panPos; // + some safe offset
             printf("#### Upper limit set at %.1f ####\n", gimbal->panUpperLimit);
             break;
         } else {
             float newPanSetpoint = gimbal->panPositionSetpoint + HOMING_SPEED;
-            iter++;
             gimbal->panPositionSetpoint = newPanSetpoint <= AS5600_RAW_ANGLE_MAX ? newPanSetpoint : newPanSetpoint - AS5600_RAW_ANGLE_MAX;
-            printf("Now at: %.1f\n", gimbal->panPositionSetpoint); // Hacky
+            printf("Moving to upper pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
         }
     }
 
@@ -190,6 +204,12 @@ void setupAxisLimits(gimbal_t *gimbal) {
     printf("Midpoint: %.0f\n", gimbal->panPositionSetpoint);
 
     while (true) {
+        if (time_us_64() - startTime >= SECS2USECS(HOMING_TIMEOUT)) {
+            printf("Timeout: Homing process exceeded time limit. Exiting homing process.\n");
+            gimbal->gimbalMode = GIMBAL_MODE_FREE;
+            return;
+        }
+
         if (fabs((float)panPos - panMidpoint) < HOMING_DISTANCE) {
             printf("At midpoint (%u actual vs %.1f setpoint)\n", panPos, panMidpoint);
 
@@ -197,14 +217,15 @@ void setupAxisLimits(gimbal_t *gimbal) {
 
             // Disarm
             gimbal->gimbalMode = GIMBAL_MODE_FREE;
-            PID_reset(&gimbal->panPositionController);
             break;
         } else {
-            printf("Moving to midpoint: at %u\n", panPos); // Hacky
+            printf("Moving to midpoint (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
         }
     }
 
     // Tilt implementation
+
+    printf("Finished setting axis soft limits.\n");
 }
 
 /**
@@ -234,6 +255,7 @@ bool updateMotors(repeating_timer_t *timer) {
         panMotor = panPwmDutyCycle;
         panDir = panDirection;
     } else if (gimbal->gimbalMode = GIMBAL_MODE_FREE) {
+        PID_reset(&gimbal->panPositionController);
         gpio_put(PAN_MOTOR_DIR_PIN, 0); // default dir
         pwm_set_gpio_level(PAN_PWM_PIN, 0); // default pwm
 

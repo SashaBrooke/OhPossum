@@ -233,10 +233,25 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
 
         // Get current gimbal angles and set setpoint for each axis to the current angle of that axis (smooth arming)
         uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
-        // If not in the allowed range (between setpoints)
+        bool inPanSoftLimits;
+        if (gimbal->panLowerLimit <= gimbal->panUpperLimit) {
+            inPanSoftLimits = (panRawAngle >= gimbal->panLowerLimit && 
+                            panRawAngle <= gimbal->panUpperLimit);
+        } else {
+            inPanSoftLimits = (panRawAngle >= gimbal->panLowerLimit || 
+                            panRawAngle <= gimbal->panUpperLimit);
+        }
         gimbal->panPositionSetpoint = (float)panRawAngle;
+
         // uint16_t tiltRawAngle = AS5600_getRawAngle(&gimbal->tiltEncoder);
-        // If not in the allowed range (between setpoints)
+        // bool inTiltSoftLimits;
+        // if (gimbal->tiltLowerLimit <= gimbal->tiltUpperLimit) {
+        //     inTiltSoftLimits = (tiltRawAngle >= gimbal->tiltLowerLimit && 
+        //                         tiltRawAngle <= gimbal->tiltUpperLimit);
+        // } else {
+        //     inTiltSoftLimits = (tiltRawAngle >= gimbal->tiltLowerLimit || 
+        //                         tiltRawAngle <= gimbal->tiltUpperLimit);
+        // }
         // gimbal->tiltPositionSetpoint = (float)tiltRawAngle;
 
         gimbal->gimbalMode = GIMBAL_MODE_ARMED;
@@ -454,10 +469,36 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
 
             float value = strtof(valueStr, &endptr);
 
+            // If parsing error or out of range
             if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
-                printf("Invalid value for 'pan-setpos'. Setpoint values must be between %u-%u.\n",
-                    AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
-            } else {
+                printf("Invalid value for 'pan-setpos'. "
+                       "Setpoint values must be valid raw encoder values (%u-%u).\n",
+                       AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+            } 
+            
+            // Not in gimbal soft limits
+            else if (!((gimbal->panLowerLimit <= gimbal->panUpperLimit && 
+                       value >= gimbal->panLowerLimit &&
+                       value <= gimbal->panUpperLimit) ||
+                       (gimbal->panLowerLimit <= gimbal->panUpperLimit &&
+                       value >= gimbal->panLowerLimit ||
+                       value <= gimbal->panUpperLimit))) {
+                printf("Invalid value for 'pan-setpos'. "
+                       "Setpoint values must be within gimbal pan soft limits (%.1f-%.1f).\n",
+                       gimbal->panLowerLimit, gimbal->panUpperLimit);
+                printf("NOTE: These values have range %u-%u (and wrap back to %u after %u).\n",
+                       AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX, AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+            } 
+            
+            // Else valid
+            else {
+                // Warn first soft limit set completed manually
+                if (gimbal->panLowerLimit == GIMBAL_DEFAULT_SENTINEL ||
+                    gimbal->panUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+                    printf("WARNING: Gimbal pan soft limits were never auto-set. "
+                           "Manually setting for the first time... (can result in damage).\n");
+                }
+
                 gimbal->panPositionSetpoint = value;
                 printf("Updated pan setpoint to %f\n", value);
             }
@@ -660,18 +701,45 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     }
 
     // else if (strcmp(name, "tilt-setpos") == 0) { // "ts" shortcut
+    //     printf("\n");
+
     //     if (valueStr && valueStr[0] != '\0') {
     //         char *endptr;
     //         errno = 0;
 
     //         float value = strtof(valueStr, &endptr);
 
+    //         // If parsing error or out of range
     //         if (errno != 0 || *endptr != '\0' || value < AS5600_RAW_ANGLE_MIN || value > AS5600_RAW_ANGLE_MAX) {
-    //             printf("Invalid value for 'tilt-setpos'. Setpoint values must be between %u-%u.\n",
-    //                 AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
-    //         } else {
+    //             printf("Invalid value for 'tilt-setpos'. "
+    //                    "Setpoint values must be valid raw encoder values (%u-%u).\n",
+    //                    AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+    //         } 
+            
+    //         // Not in gimbal soft limits
+    //         else if (!((gimbal->tiltLowerLimit <= gimbal->tiltUpperLimit && 
+    //                    value >= gimbal->tiltLowerLimit &&
+    //                    value <= gimbal->tiltUpperLimit) ||
+    //                    (gimbal->tiltLowerLimit <= gimbal->tiltUpperLimit &&
+    //                    value >= gimbal->tiltLowerLimit ||
+    //                    value <= gimbal->tiltUpperLimit))) {
+    //             printf("Invalid value for 'tilt-setpos'. "
+    //                    "Setpoint values must be within gimbal tilt soft limits (%.1f-%.1f).\n",
+    //                    gimbal->tiltLowerLimit, gimbal->tiltUpperLimit);
+    //             printf("NOTE: These values have range %u-%u (and wrap back to %u after %u).\n",
+    //                    AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX, AS5600_RAW_ANGLE_MIN, AS5600_RAW_ANGLE_MAX);
+    //         } 
+            
+    //         // Else valid
+    //         else {
+    //             // Warn first soft limit set completed manually
+    //             if (gimbal->tiltLowerLimit == GIMBAL_DEFAULT_SENTINEL ||
+    //                 gimbal->tiltUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+    //                 printf("WARNING: Gimbal tilt soft limits were never auto-set. "
+    //                        "Manually setting for the first time... (can result in damage).\n");
+    //             }
+
     //             gimbal->tiltPositionSetpoint = value;
-    //             gimbal->savedConfiguration = false;
     //             printf("Updated tilt setpoint to %f\n", value);
     //         }
     //     } else {

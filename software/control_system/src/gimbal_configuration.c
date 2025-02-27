@@ -75,9 +75,25 @@ void displayGimbal(gimbal_t *gimbal) {
     // Tilt position setpoint
     // printf("Tilt Position Setpoint: %.2f\n", gimbal->tiltPositionSetpoint);
 
+    // Pan axis limits
+    printf("Pan Lower Limit: %.2f\n", gimbal->panLowerLimit);
+    printf("Pan Upper Limit: %.2f\n", gimbal->panUpperLimit);
+
+    // Tilt axis limits
+    // printf("Tilt Lower Limit: %.2f\n", gimbal->tiltLowerLimit);
+    // printf("Tilt Upper Limit: %.2f", gimbal->tiltUpperLimit);
+
     // Streaming status and rate
-    printf("Streaming: %s\n", gimbal->streaming ? "Enabled" : "Disabled");
+    printf("Streaming (global): %s\n", gimbal->streaming ? "Enabled" : "Disabled");
     printf("Stream Rate: %d\n", gimbal->streamRate);
+
+    // Specific streams
+    printf("Pan position stream: %s\n", gimbal->panPositionStream ? "Enabled" : "Disabled");
+    printf("Pan PID stream: %s\n", gimbal->panPidStream ? "Enabled" : "Disabled");
+    printf("Pan motor stream: %s\n", gimbal->panMotorStream ? "Enabled" : "Disabled");
+    // printf("Tilt position stream: %s\n", gimbal->tiltPositionStream ? "Enabled" : "Disabled");
+    // printf("Tilt PID stream: %s\n", gimbal->tiltPidStream ? "Enabled" : "Disabled");
+    // printf("Tilt motor stream: %s\n", gimbal->tiltMotorStream ? "Enabled" : "Disabled");
 
     // Pan position controller PID values
     printf("Pan Position Controller:\n");

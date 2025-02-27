@@ -222,7 +222,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
 
         if (gimbal->panLowerLimit == GIMBAL_DEFAULT_SENTINEL || gimbal->panUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
             printf("Pan axis limits are unset. Cannot arm.\n");
-            printf("\n");
+            printf("\n\n");
             return;
         }
         // if (gimbal->tiltLowerLimit == GIMBAL_DEFAULT_SENTINEL || gimbal->tiltUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
@@ -234,24 +234,40 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
         // Get current gimbal angles and set setpoint for each axis to the current angle of that axis (smooth arming)
         uint16_t panRawAngle = AS5600_getRawAngle(&gimbal->panEncoder);
         bool inPanSoftLimits;
-        if (gimbal->panLowerLimit <= gimbal->panUpperLimit) {
+        if (gimbal->panLowerLimit < gimbal->panUpperLimit) {
             inPanSoftLimits = (panRawAngle >= gimbal->panLowerLimit && 
                             panRawAngle <= gimbal->panUpperLimit);
-        } else {
+        } else if (gimbal->panLowerLimit > gimbal->panUpperLimit) {
             inPanSoftLimits = (panRawAngle >= gimbal->panLowerLimit || 
                             panRawAngle <= gimbal->panUpperLimit);
+        } else {
+            inPanSoftLimits = true;
         }
+
+        if (!inPanSoftLimits) {
+            printf("Gimbal not in pan limits. Cannot arm.\n\n");
+            return;
+        }
+
         gimbal->panPositionSetpoint = (float)panRawAngle;
 
         // uint16_t tiltRawAngle = AS5600_getRawAngle(&gimbal->tiltEncoder);
         // bool inTiltSoftLimits;
-        // if (gimbal->tiltLowerLimit <= gimbal->tiltUpperLimit) {
+        // if (gimbal->tiltLowerLimit < gimbal->tiltUpperLimit) {
         //     inTiltSoftLimits = (tiltRawAngle >= gimbal->tiltLowerLimit && 
         //                         tiltRawAngle <= gimbal->tiltUpperLimit);
-        // } else {
+        // } else if (gimbal->tiltLowerLimit > gimbal->tiltUpperLimit) {
         //     inTiltSoftLimits = (tiltRawAngle >= gimbal->tiltLowerLimit || 
         //                         tiltRawAngle <= gimbal->tiltUpperLimit);
+        // } else {
+        //     inTiltSoftLimits = true;
         // }
+
+        // if (!inTiltSoftLimits) {
+        //     printf("Gimbal not in tilt limits. Cannot arm.\n");
+        //     return;
+        // }
+
         // gimbal->tiltPositionSetpoint = (float)tiltRawAngle;
 
         gimbal->gimbalMode = GIMBAL_MODE_ARMED;
@@ -477,12 +493,12 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
             } 
             
             // Not in gimbal soft limits
-            else if (!((gimbal->panLowerLimit <= gimbal->panUpperLimit && 
-                       value >= gimbal->panLowerLimit &&
-                       value <= gimbal->panUpperLimit) ||
-                       (gimbal->panLowerLimit <= gimbal->panUpperLimit &&
-                       value >= gimbal->panLowerLimit ||
-                       value <= gimbal->panUpperLimit))) {
+            else if ((gimbal->panLowerLimit < gimbal->panUpperLimit &&
+                       (value < gimbal->panLowerLimit ||
+                       value > gimbal->panUpperLimit)) ||
+                       (gimbal->panLowerLimit > gimbal->panUpperLimit &&
+                       value > gimbal->panUpperLimit &&
+                       value < gimbal->panLowerLimit)) {
                 printf("Invalid value for 'pan-setpos'. "
                        "Setpoint values must be within gimbal pan soft limits (%.1f-%.1f).\n",
                        gimbal->panLowerLimit, gimbal->panUpperLimit);

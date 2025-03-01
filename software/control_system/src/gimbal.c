@@ -139,6 +139,12 @@ void setupGPIO() {
 void setupAxisLimits(gimbal_t *gimbal) {
     uint64_t startTime = time_us_64();
 
+    // Temp limits (gimbal limits only set if homing process actually completes)
+    float tmpPanLowerLimit;
+    float tmpPanUpperLimit;
+    float tmpTiltLowerLimit;
+    float tmpTiltUpperLimit;
+
     // Arm gimbal
     gimbal->panPositionSetpoint = (float)panPos;
     // uint16_t tiltStartPos = AS5600_getRawAngle(&gimbal->tiltEncoder);
@@ -156,8 +162,8 @@ void setupAxisLimits(gimbal_t *gimbal) {
         }
 
         if (atPanLowerLimit) {
-            gimbal->panLowerLimit = (float)panPos; // + some safe offset
-            printf("#### Lower limit set at %.1f ####\n", gimbal->panLowerLimit);
+            tmpPanLowerLimit = (float)panPos; // + some safe offset
+            printf("#### Lower limit found at %.1f ####\n", tmpPanLowerLimit);
             // gimbal->panEncoder.offset = gimbal->panLowerLimit;
             break;
         } else {
@@ -181,8 +187,8 @@ void setupAxisLimits(gimbal_t *gimbal) {
         }
 
         if (atPanUpperLimit) {
-            gimbal->panUpperLimit = (float)panPos; // + some safe offset
-            printf("#### Upper limit set at %.1f ####\n", gimbal->panUpperLimit);
+            tmpPanUpperLimit = (float)panPos; // + some safe offset
+            printf("#### Upper limit found at %.1f ####\n", tmpPanUpperLimit);
             break;
         } else {
             float newPanSetpoint = gimbal->panPositionSetpoint + HOMING_SPEED;
@@ -195,10 +201,10 @@ void setupAxisLimits(gimbal_t *gimbal) {
 
     // Move to a central position
     float panMidpoint;
-    if (gimbal->panLowerLimit < gimbal->panUpperLimit) {
-        panMidpoint = (gimbal->panLowerLimit + gimbal->panUpperLimit) / 2;
+    if (tmpPanLowerLimit < tmpPanUpperLimit) {
+        panMidpoint = (tmpPanLowerLimit + tmpPanUpperLimit) / 2;
     } else {
-        panMidpoint = fmod(gimbal->panLowerLimit + (AS5600_RAW_ANGLE_MAX + gimbal->panUpperLimit - gimbal->panLowerLimit) / 2, AS5600_RAW_ANGLE_MAX);
+        panMidpoint = fmod(tmpPanLowerLimit + (AS5600_RAW_ANGLE_MAX + tmpPanUpperLimit - tmpPanLowerLimit) / 2, AS5600_RAW_ANGLE_MAX);
     }
     gimbal->panPositionSetpoint = panMidpoint >= 0 ? panMidpoint : panMidpoint + AS5600_RAW_ANGLE_MAX;
     printf("Midpoint: %.0f\n", gimbal->panPositionSetpoint);
@@ -212,6 +218,12 @@ void setupAxisLimits(gimbal_t *gimbal) {
 
         if (fabs((float)panPos - panMidpoint) < HOMING_DISTANCE) {
             printf("At midpoint (%u actual vs %.1f setpoint)\n", panPos, panMidpoint);
+
+            // Actually set soft limits
+            gimbal->panLowerLimit = tmpPanLowerLimit;
+            gimbal->panUpperLimit = tmpPanUpperLimit;
+            // gimbal->tiltLowerLimit = tmpTiltLowerLimit;
+            // gimbal->tiltUpperLimit = tmpTiltUpperLimit;
 
             sleep_ms(500); // Pause at midpoint
 

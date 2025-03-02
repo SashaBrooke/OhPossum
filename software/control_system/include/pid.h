@@ -81,13 +81,16 @@ void PID_reset(volatile PID_t *pid);
  * @param pid Pointer to the PID controller structure.
  * @param setpoint The desired target setpoint value.
  * @param measurement The current measured value.
+ * @param lowerLimit (Optional) To help specify allowed PID output for rotary applications
+ * @param upperLimit (Optional) To help specify allowed PID output for rotary applications
  * @return The computed PID output.
  *
  * This function calculates the new PID output based on the error between 
  * the setpoint and the measurement. It updates the integrator and 
  * differentiator states.
  */
-float PID_update(volatile PID_t *pid, float setpoint, float measurement);
+float PID_update(volatile PID_t *pid, float setpoint, float measurement,
+                 float lowerLimit, float upperLimit);
 
 /**
  * @brief Normalizes the PID output to a new specified range.

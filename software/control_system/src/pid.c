@@ -8,6 +8,10 @@
 #include <math.h>
 
 #include "pid.h"
+#include "rotary_utils.h"
+#include "gimbal_configuration.h"
+
+#define NO_OUTPUT 0.0f
 
 /* Setup the PID controller */
 PID_t PID_setup(float Kp, float Ki, float Kd, float tau, 
@@ -55,14 +59,23 @@ void PID_reset(volatile PID_t *pid) {
 }
 
 /* Update the PID controller */
-float PID_update(volatile PID_t *pid, float setpoint, float measurement) {
+float PID_update(volatile PID_t *pid, float setpoint, float measurement,
+                 float lowerLimit, float upperLimit) {
     // Error signal
-    float error = setpoint - measurement;
+    float error;
+    rotaryutils_result_e result;
 
-    if (error > pid->maxMeasurement / 2) {
-        error -= pid->maxMeasurement;
-    } else if (error < -(pid->maxMeasurement / 2)) {
-        error += pid->maxMeasurement;
+    if (lowerLimit == GIMBAL_DEFAULT_UNSET_ROM || upperLimit == GIMBAL_DEFAULT_UNSET_ROM) {
+        result = calculate_rotary_error(&error, measurement, setpoint, pid->maxMeasurement);
+    } else if (lowerLimit == GIMBAL_360_ROM && upperLimit == GIMBAL_360_ROM) {
+        result = calculate_rotary_error(&error, measurement, setpoint, pid->maxMeasurement);
+    } else {
+        result = calculate_rotary_error__limits(&error, measurement, setpoint, pid->maxMeasurement,
+            lowerLimit, upperLimit);
+    }
+
+    if (result != ROTARYUTILS_SUCCESS) {
+        return NO_OUTPUT;
     }
 
     // Proportional term

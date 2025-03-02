@@ -220,7 +220,7 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
     else if (strcmp(name, "gimbal-arm") == 0) { // "arm" shortcut
         printf("\n");
 
-        if (gimbal->panLowerLimit == GIMBAL_DEFAULT_SENTINEL || gimbal->panUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+        if (gimbal->panLowerLimit == GIMBAL_DEFAULT_UNSET_ROM || gimbal->panUpperLimit == GIMBAL_DEFAULT_UNSET_ROM) {
             printf("Pan axis limits are unset. Cannot arm.\n");
             printf("\n\n");
             return;
@@ -509,8 +509,8 @@ void executeCommand(char *command, gimbal_t *gimbal, gimbal_configuration_t *con
             // Else valid
             else {
                 // Warn first soft limit set completed manually
-                if (gimbal->panLowerLimit == GIMBAL_DEFAULT_SENTINEL ||
-                    gimbal->panUpperLimit == GIMBAL_DEFAULT_SENTINEL) {
+                if (gimbal->panLowerLimit == GIMBAL_DEFAULT_UNSET_ROM ||
+                    gimbal->panUpperLimit == GIMBAL_DEFAULT_UNSET_ROM) {
                     printf("WARNING: Gimbal pan soft limits were never auto-set. "
                            "Manually setting for the first time... (can result in damage).\n");
                 }

@@ -29,6 +29,7 @@ extern const float     AS5600_RAW_TO_DEGREES;
 extern const float     AS5600_DEGREES_TO_RAW;
 
 //  Resolution
+extern const uint16_t  AS5600_ANGULAR_RESOLUTION;
 extern const uint16_t  AS5600_RAW_ANGLE_MIN;
 extern const uint16_t  AS5600_RAW_ANGLE_MAX;
 

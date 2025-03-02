@@ -258,7 +258,8 @@ bool updateMotors(repeating_timer_t *timer) {
     panPos = panRawAngle;
 
     if (gimbal->gimbalMode == GIMBAL_MODE_ARMED) {
-        float panPidOutput = PID_update(&gimbal->panPositionController, gimbal->panPositionSetpoint, (float)panRawAngle);
+        float panPidOutput = PID_update(&gimbal->panPositionController, gimbal->panPositionSetpoint,
+            (float)panRawAngle, gimbal->panLowerLimit, gimbal->panUpperLimit);
         float panPwmDutyCycle = PID_normaliseOutput(&gimbal->panPositionController, -100.0f, 100.0f);
         uint8_t panDirection = panPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
         gpio_put(PAN_MOTOR_DIR_PIN, panDirection);
@@ -280,7 +281,8 @@ bool updateMotors(repeating_timer_t *timer) {
     // tiltPos = tiltRawAngle;
 
     // if (gimbalMode == GIMBAL_MODE_ARMED) {
-    //     float tiltPidOutput = PID_update(&gimbal->tiltPositionController, 1000.0f, (float)tiltRawAngle);
+    //     float tiltPidOutput = PID_update(&gimbal->tiltPositionController, 1000.0f,
+    //         (float)tiltRawAngle, gimbal->tiltLowerLimit, gimbal->tiltUpperLimit);
     //     float tiltPwmDutyCycle = PID_normaliseOutput(&gimbal->tiltPositionController, -100.0f, 100.0f);
     //     uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
     //     gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
@@ -331,7 +333,7 @@ int main() {
                                                  gimbalConfig.panPositionController.intLimMin,
                                                  gimbalConfig.panPositionController.intLimMax,
                                                  FREQ2PERIOD(CONTROLS_FREQ),
-                                                 (float)AS5600_RAW_ANGLE_MAX);
+                                                 (float)AS5600_ANGULAR_RESOLUTION);
         // gimbal.tiltPositionController = PID_setup(gimbalConfig.tiltPositionController.Kp,
         //                                           gimbalConfig.tiltPositionController.Ki,
         //                                           gimbalConfig.tiltPositionController.Kd,
@@ -341,7 +343,7 @@ int main() {
         //                                           gimbalConfig.tiltPositionController.intLimMin,
         //                                           gimbalConfig.tiltPositionController.intLimMax,
         //                                           FREQ2PERIOD(CONTROLS_FREQ),
-        //                                           (float)AS5600_RAW_ANGLE_MAX);
+        //                                           (float)AS5600_ANGULAR_RESOLUTION);
     } else {
         // Setup using default values
         printf("Creating new configuration using default values.\n");
@@ -355,7 +357,7 @@ int main() {
                                                  0.0f,
                                                  0.0f,
                                                  FREQ2PERIOD(CONTROLS_FREQ),
-                                                 (float)AS5600_RAW_ANGLE_MAX
+                                                 (float)AS5600_ANGULAR_RESOLUTION
                                                  );
         // gimbal.tiltPositionController = PID_setup(0.0f,
         //                                           0.0f,
@@ -366,7 +368,7 @@ int main() {
         //                                           0.0f,
         //                                           0.0f,
         //                                           FREQ2PERIOD(CONTROLS_FREQ),
-        //                                           (float)AS5600_RAW_ANGLE_MAX);
+        //                                           (float)AS5600_ANGULAR_RESOLUTION);
     }
 
     gimbalConfig.panPositionController = gimbal.panPositionController;

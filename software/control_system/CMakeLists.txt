@@ -12,6 +12,7 @@ set(SOURCES
     src/pid.c
     src/command.c
     src/gimbal_configuration.c
+    src/rotary_utils.c
 )
 
 # Optional: Automatically collect all .c files in the src/ directory

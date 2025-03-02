@@ -17,8 +17,9 @@
 #define GIMBAL_SERIAL_NUMBER_MIN  0
 #define GIMBAL_SERIAL_NUMBER_MAX  255
 
-// Invalid or unset default value
-#define GIMBAL_DEFAULT_SENTINEL  (-1)
+// Gimbal range of motion (ROM)
+#define GIMBAL_DEFAULT_UNSET_ROM  (-1)
+#define GIMBAL_360_ROM            (-2)
 
 // Streaming rate range
 extern const int GIMBAL_SLOW_STREAM_RATE;

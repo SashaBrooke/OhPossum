@@ -13,4 +13,7 @@ rotaryutils_result_e calculate_rotary_error__limits(float *error,
     float measurement, float setpoint, float maxMeasurement, float lowerLimit,
     float upperLimit);
 
+rotaryutils_result_e in_rotary_limits(float value, float lowerLimit, 
+    float upperLimit);
+
 #endif  // ROTARY_UTILS_H

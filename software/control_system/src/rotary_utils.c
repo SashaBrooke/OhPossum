@@ -55,3 +55,20 @@ calculate_rotary_error__limits(float *rotError, float measurement, float setpoin
         return ROTARYUTILS_SUCCESS;
     }
 }
+
+rotaryutils_result_e
+in_rotary_limits(float value, float lowerLimit, float upperLimit)
+{
+    if (upperLimit < lowerLimit && value < lowerLimit && value > upperLimit)
+    {
+        return ROTARYUTILS_UNALLOWED_REGION;
+    }
+    else if (upperLimit > lowerLimit && (value < lowerLimit || value > upperLimit))
+    {
+        return ROTARYUTILS_UNALLOWED_REGION;
+    }
+    else
+    {
+        return ROTARYUTILS_SUCCESS;
+    }
+}

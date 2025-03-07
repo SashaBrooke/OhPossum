@@ -70,12 +70,27 @@ float PID_update(volatile PID_t *pid, float setpoint, float measurement,
     } else if (lowerLimit == GIMBAL_360_ROM && upperLimit == GIMBAL_360_ROM) {
         result = calculate_rotary_error(&error, measurement, setpoint, pid->maxMeasurement);
     } else {
+        if (in_rotary_limits(measurement, lowerLimit, upperLimit) == ROTARYUTILS_UNALLOWED_REGION) {
+            // Get nearest limit
+            float toLower, toUpper;
+            calculate_rotary_error(&toLower, measurement, lowerLimit, pid->maxMeasurement);
+            calculate_rotary_error(&toUpper, measurement, upperLimit, pid->maxMeasurement);
+
+            // Return max output towards nearest limit
+            float closest = fminf(fabs(toLower), fabs(toUpper));
+            float dirToClosestLimit = fabs(toLower) == closest ? toLower / closest : toUpper / closest;
+
+            pid->output = pid->outLimMax * dirToClosestLimit; // Can lower this to reduce instability near limits
+            return pid->output;
+        }
+
         result = calculate_rotary_error__limits(&error, measurement, setpoint, pid->maxMeasurement,
             lowerLimit, upperLimit);
     }
 
     if (result != ROTARYUTILS_SUCCESS) {
-        return NO_OUTPUT;
+        pid->output = NO_OUTPUT;
+        return pid->output;
     }
 
     // Proportional term

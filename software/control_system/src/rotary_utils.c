@@ -2,6 +2,10 @@
 
 #include "rotary_utils.h"
 
+/*
+    Get the error between two points, accounting for wrapping around `maxMeasurement`
+    and with total freedom for 'error path' choice
+*/
 rotaryutils_result_e
 calculate_rotary_error(float *rotError, float measurement, float setpoint, 
     float maxMeasurement)
@@ -19,6 +23,10 @@ calculate_rotary_error(float *rotError, float measurement, float setpoint,
     return ROTARYUTILS_SUCCESS;
 }
 
+/*
+    Get the error between two points, accounting for wrapping around `maxMeasurement`
+    and with 'error path' choice restricted by two limits (lower and upper)
+*/
 rotaryutils_result_e
 calculate_rotary_error__limits(float *rotError, float measurement, float setpoint, 
     float maxMeasurement, float lowerLimit, float upperLimit)
@@ -56,6 +64,7 @@ calculate_rotary_error__limits(float *rotError, float measurement, float setpoin
     }
 }
 
+/* Determine whether a value is within rotary limits or not */
 rotaryutils_result_e
 in_rotary_limits(float value, float lowerLimit, float upperLimit)
 {

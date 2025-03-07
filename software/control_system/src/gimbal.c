@@ -26,49 +26,35 @@
 #define SECS2USECS(secs)  ((secs) * 1000000)                     // Converts a time from seconds to micro-seconds
 
 // Pan hardware
-#define PAN_I2C_PORT         i2c0
-#define PAN_I2C_SDA_PIN      4
-#define PAN_I2C_SCL_PIN      5
-#define PAN_ENC_DIR_PIN      3
-#define PAN_PWM_PIN          6
-#define PAN_MOTOR_DIR_PIN    8
-#define PAN_LOWER_LIMIT_PIN  17
-#define PAN_UPPER_LIMIT_PIN  16
-
-// // Tilt hardware
-// #define TILT_I2C_PORT         i2c1
-// #define TILT_I2C_SDA_PIN      10
-// #define TILT_I2C_SCL_PIN      11
-// #define TILT_ENC_DIR_PIN      12
-// #define TILT_PWM_PIN          7
-// #define TILT_MOTOR_DIR_PIN    9
-// #define TILT_LOWER_LIMIT_PIN  14
-// #define TILT_UPPER_LIMIT_PIN  15
+#define PAN_I2C_PORT             i2c0
+#define PAN_I2C_SDA_PIN          4
+#define PAN_I2C_SCL_PIN          5
+#define PAN_ENC_DIR_PIN          3
+#define PAN_PWM_PIN              6
+#define PAN_MOTOR_DIR_PIN        8
+#define PAN_LOWER_LIMIT_PIN      17
+#define PAN_UPPER_LIMIT_PIN      16
 
 // Debug hardware
-#define TEST_PIN 22
+#define TEST_PIN                 22
 
 // PWM settings
-#define PWM_TOP_REG 100
-#define PWM_CLK_DIVIDER 125.0f
+#define PWM_TOP_REG              100
+#define PWM_CLK_DIVIDER          125.0f
 
 // Controls loop frequency
-#define CONTROLS_FREQ 1000
+#define CONTROLS_FREQ            1000
 
 // Homing
-#define HOMING_SPEED 0.1           // (angular position / second)
-#define HOMING_DISTANCE 40         // (angular position)
-#define HOMING_TIMEOUT 10          // (seconds)
-#define SOFT_LIMIT_OFFSET_ANGLE 5  // (degrees)
+#define HOMING_SPEED             0.1  // (angular position / second)
+#define HOMING_DISTANCE          40   // (angular position)
+#define HOMING_TIMEOUT           10   // (seconds)
+#define SOFT_LIMIT_OFFSET_ANGLE  5    // (degrees)
 
 // Stream variables
-volatile uint16_t panPos = 0;
-volatile float panMotor = 0.0f;
-volatile uint8_t panDir = 0;
-
-// volatile uint16_t tiltPos = 0;
-// volatile float tiltMotor = 0.0f;
-// volatile uint8_t tiltDir = 0;
+volatile uint16_t panPos       = 0;
+volatile float panMotor        = 0.0f;
+volatile uint8_t panDir        = 0;
 
 volatile bool printFlag = false;
 
@@ -83,34 +69,22 @@ void setupGPIO() {
     gpio_pull_up(PAN_I2C_SDA_PIN);
     gpio_pull_up(PAN_I2C_SCL_PIN);
 
-    // i2c_init(TILT_I2C_PORT, 400000);
-    // gpio_set_function(TILT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    // gpio_set_function(TILT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    // gpio_pull_up(TILT_I2C_SDA_PIN);
-    // gpio_pull_up(TILT_I2C_SCL_PIN);
-
     // Configure PWM output
     gpio_set_function(PAN_PWM_PIN, GPIO_FUNC_PWM);
-    // gpio_set_function(TILT_PWM_PIN, GPIO_FUNC_PWM);
 
-    unsigned int pwmSliceNum = pwm_gpio_to_slice_num(PAN_PWM_PIN); // Pan and tilt PWM pins are on the same slice
+    unsigned int pwmSliceNum = pwm_gpio_to_slice_num(PAN_PWM_PIN);  // Pan and tilt PWM pins are on the same slice
     pwm_config configPWM = pwm_get_default_config();
     pwm_config_set_clkdiv(&configPWM, PWM_CLK_DIVIDER);
     pwm_init(pwmSliceNum, &configPWM, true);
     pwm_set_wrap(pwmSliceNum, PWM_TOP_REG - 1); 
 
-    pwm_set_gpio_level(PAN_PWM_PIN, 0);    /**< Explicitly set to 0 duty cycle initially */
-    // pwm_set_gpio_level(TILT_PWM_PIN, 0);   /**< Explicitly set to 0 duty cycle initially */
+    pwm_set_gpio_level(PAN_PWM_PIN, 0);  // Explicitly set to 0 duty cycle initially
     pwm_set_enabled(pwmSliceNum, true);
 
     // Configure initial motor directions
     gpio_init(PAN_MOTOR_DIR_PIN);
     gpio_set_dir(PAN_MOTOR_DIR_PIN, GPIO_OUT);
-    gpio_put(PAN_MOTOR_DIR_PIN, 0);  /**< Default LOW, just be explicit */
-
-    // gpio_init(TILT_MOTOR_DIR_PIN);
-    // gpio_set_dir(TILT_MOTOR_DIR_PIN, GPIO_OUT);
-    // gpio_put(TILT_MOTOR_DIR_PIN, 0);  /**< Default LOW, just be explicit */
+    gpio_put(PAN_MOTOR_DIR_PIN, 0);  // Default LOW, just be explicit
 
     // Configure limit switch pins
     gpio_init(PAN_LOWER_LIMIT_PIN);
@@ -121,18 +95,10 @@ void setupGPIO() {
     gpio_set_dir(PAN_UPPER_LIMIT_PIN, GPIO_IN);
     gpio_pull_up(PAN_UPPER_LIMIT_PIN);
 
-    // gpio_init(TILT_LOWER_LIMIT_PIN);
-    // gpio_set_dir(TILT_LOWER_LIMIT_PIN, GPIO_IN);
-    // gpio_pull_up(TILT_LOWER_LIMIT_PIN);
-
-    // gpio_init(TILT_UPPER_LIMIT_PIN);
-    // gpio_set_dir(TILT_UPPER_LIMIT_PIN, GPIO_IN);
-    // gpio_pull_up(TILT_UPPER_LIMIT_PIN);
-
     // Configure debugging pin
     gpio_init(TEST_PIN);
     gpio_set_dir(TEST_PIN, GPIO_OUT);
-    gpio_put(TEST_PIN, 0);  /**< Default LOW, just be explicit */
+    gpio_put(TEST_PIN, 0);  // Default LOW, just be explicit
 }
 
 /**
@@ -144,18 +110,14 @@ void setupAxisLimits(gimbal_t *gimbal) {
     // Temp limits (gimbal limits only set if homing process actually completes)
     float tmpPanLowerLimit;
     float tmpPanUpperLimit;
-    float tmpTiltLowerLimit;
-    float tmpTiltUpperLimit;
 
     // Arm gimbal
     gimbal->panPositionSetpoint = (float)panPos;
-    // uint16_t tiltStartPos = AS5600_getRawAngle(&gimbal->tiltEncoder);
-    // gimbal->tiltPositionSetpoint = (float)tiltStartPos;
     gimbal->gimbalMode = GIMBAL_MODE_ARMED;
 
     // Find pan lower limit
     while (true) {
-        bool atPanLowerLimit = !gpio_get(PAN_LOWER_LIMIT_PIN); // Pulled high default (therefore !)
+        bool atPanLowerLimit = !gpio_get(PAN_LOWER_LIMIT_PIN);  // Pulled high default (therefore !)
 
         if (time_us_64() - startTime >= SECS2USECS(HOMING_TIMEOUT)) {
             printf("Timeout: Homing process exceeded time limit. Exiting homing process.\n");
@@ -166,12 +128,11 @@ void setupAxisLimits(gimbal_t *gimbal) {
         if (atPanLowerLimit) {
             tmpPanLowerLimit = (float)panPos;
             printf("#### Lower limit found at %.1f ####\n", tmpPanLowerLimit);
-            // gimbal->panEncoder.offset = gimbal->panLowerLimit;
             break;
         } else {
             float newPanSetpoint = gimbal->panPositionSetpoint - HOMING_SPEED;
             gimbal->panPositionSetpoint = newPanSetpoint >= 0 ? newPanSetpoint : newPanSetpoint + AS5600_RAW_ANGLE_MAX;
-            printf("Moving to lower pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
+            printf("Moving to lower pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint);  // Hacky
         }
     }
 
@@ -180,7 +141,7 @@ void setupAxisLimits(gimbal_t *gimbal) {
     // Find pan upper limit
     int iter = 0;
     while (true) {
-        bool atPanUpperLimit = !gpio_get(PAN_UPPER_LIMIT_PIN); // Pulled high default (therefore !)
+        bool atPanUpperLimit = !gpio_get(PAN_UPPER_LIMIT_PIN);  // Pulled high default (therefore !)
 
         if (time_us_64() - startTime >= SECS2USECS(HOMING_TIMEOUT)) {
             printf("Timeout: Homing process exceeded time limit. Exiting homing process.\n");
@@ -195,7 +156,7 @@ void setupAxisLimits(gimbal_t *gimbal) {
         } else {
             float newPanSetpoint = gimbal->panPositionSetpoint + HOMING_SPEED;
             gimbal->panPositionSetpoint = newPanSetpoint <= AS5600_RAW_ANGLE_MAX ? newPanSetpoint : newPanSetpoint - AS5600_RAW_ANGLE_MAX;
-            printf("Moving to upper pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
+            printf("Moving to upper pan limit (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint);  // Hacky
         }
     }
 
@@ -232,25 +193,21 @@ void setupAxisLimits(gimbal_t *gimbal) {
             if (gimbalRom > 2 * round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW)) {
                 gimbal->panLowerLimit = tmpPanLowerLimit + round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW);
                 gimbal->panUpperLimit = tmpPanUpperLimit - round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW);
-                // gimbal->tiltLowerLimit = tmpTiltLowerLimit;
-                // gimbal->tiltUpperLimit = tmpTiltUpperLimit;
             } else {
                 printf("Error: Gimbal range of motion not sufficient to set soft limit safety offsets. Exiting homing process.\n");
                 gimbal->gimbalMode = GIMBAL_MODE_FREE;
                 return;
             }
 
-            sleep_ms(500); // Pause at midpoint
+            sleep_ms(500);  // Pause at midpoint
 
             // Disarm
             gimbal->gimbalMode = GIMBAL_MODE_FREE;
             break;
         } else {
-            printf("Moving to midpoint (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint); // Hacky
+            printf("Moving to midpoint (actual: %u, setpoint: %.1f)\n", panPos, gimbal->panPositionSetpoint);  // Hacky
         }
     }
-
-    // Tilt implementation
 
     printf("Finished setting axis soft limits.\n");
 }
@@ -284,28 +241,12 @@ bool updateMotors(repeating_timer_t *timer) {
         panDir = panDirection;
     } else if (gimbal->gimbalMode = GIMBAL_MODE_FREE) {
         PID_reset(&gimbal->panPositionController);
-        gpio_put(PAN_MOTOR_DIR_PIN, 0); // default dir
-        pwm_set_gpio_level(PAN_PWM_PIN, 0); // default pwm
+        gpio_put(PAN_MOTOR_DIR_PIN, 0);      // Default dir
+        pwm_set_gpio_level(PAN_PWM_PIN, 0);  // Default pwm
 
         panMotor = 0;
         panDir = 0;
     }
-
-    // Tilt
-    // uint16_t tiltRawAngle = AS5600_getRawAngle(&gimbal->tiltEncoder);
-    // tiltPos = tiltRawAngle;
-
-    // if (gimbalMode == GIMBAL_MODE_ARMED) {
-    //     float tiltPidOutput = PID_update(&gimbal->tiltPositionController, 1000.0f,
-    //         (float)tiltRawAngle, gimbal->tiltLowerLimit, gimbal->tiltUpperLimit);
-    //     float tiltPwmDutyCycle = PID_normaliseOutput(&gimbal->tiltPositionController, -100.0f, 100.0f);
-    //     uint8_t tiltDirection = tiltPidOutput > 0 ? AS5600_CLOCK_WISE : AS5600_COUNTERCLOCK_WISE;
-    //     gpio_put(TILT_MOTOR_DIR_PIN, tiltDirection);
-    //     pwm_set_gpio_level(TILT_PWM_PIN, PWM_TOP_REG * abs(panPwmDutyCycle));
-
-    //     tiltMotor = tiltPwmDutyCycle;
-    //     tiltDir = tiltDirection;
-    // }
 
     // Handle print flag toggling
     static int counter = 0; 
@@ -349,16 +290,6 @@ int main() {
                                                  gimbalConfig.panPositionController.intLimMax,
                                                  FREQ2PERIOD(CONTROLS_FREQ),
                                                  (float)AS5600_ANGULAR_RESOLUTION);
-        // gimbal.tiltPositionController = PID_setup(gimbalConfig.tiltPositionController.Kp,
-        //                                           gimbalConfig.tiltPositionController.Ki,
-        //                                           gimbalConfig.tiltPositionController.Kd,
-        //                                           gimbalConfig.tiltPositionController.tau,
-        //                                           gimbalConfig.tiltPositionController.outLimMin,
-        //                                           gimbalConfig.tiltPositionController.outLimMax,
-        //                                           gimbalConfig.tiltPositionController.intLimMin,
-        //                                           gimbalConfig.tiltPositionController.intLimMax,
-        //                                           FREQ2PERIOD(CONTROLS_FREQ),
-        //                                           (float)AS5600_ANGULAR_RESOLUTION);
     } else {
         // Setup using default values
         printf("Creating new configuration using default values.\n");
@@ -374,30 +305,18 @@ int main() {
                                                  FREQ2PERIOD(CONTROLS_FREQ),
                                                  (float)AS5600_ANGULAR_RESOLUTION
                                                  );
-        // gimbal.tiltPositionController = PID_setup(0.0f,
-        //                                           0.0f,
-        //                                           0.0f,
-        //                                           0.0f,
-        //                                           -100.0f,
-        //                                           100.0f,
-        //                                           0.0f,
-        //                                           0.0f,
-        //                                           FREQ2PERIOD(CONTROLS_FREQ),
-        //                                           (float)AS5600_ANGULAR_RESOLUTION);
     }
 
     gimbalConfig.panPositionController = gimbal.panPositionController;
-    // gimbalConfig.tiltPositionController = gimbal.tiltPositionController;
 
     displayGimbalConfiguration(&gimbalConfig);
 
     gimbal.panEncoder = AS5600_setup(PAN_I2C_PORT, PAN_ENC_DIR_PIN, AS5600_CLOCK_WISE);
-    // gimbal.tiltEncoder = AS5600_setup(TILT_I2C_PORT, TILT_DIR_PIN, AS5600_CLOCK_WISE);
 
     displayGimbal(&gimbal);
 
     printf("Starting controls loop\n");
-    repeating_timer_t timer; // Consider using real time clock peripheral if for use longer than ~72 mins
+    repeating_timer_t timer;  // Consider using real time clock peripheral if for use longer than ~72 mins
     add_repeating_timer_us(-SECS2USECS(FREQ2PERIOD(CONTROLS_FREQ)), updateMotors, &gimbal, &timer);
 
     sleep_ms(1000);
@@ -420,7 +339,7 @@ int main() {
             }
             if (gimbal.panPidStream) {
                 printf("%f,%f,%f,%f,",
-                    gimbal.panPositionController.prevError, // Actually the error from the current controls loop
+                    gimbal.panPositionController.prevError,  // Actually the error from the current controls loop
                     gimbal.panPositionController.integrator,
                     gimbal.panPositionController.differentiator,
                     gimbal.panPositionController.output
@@ -431,7 +350,7 @@ int main() {
             }
             printf("\n");
 
-            printFlag = false;  /**< Reset print flag */
+            printFlag = false;  // Reset print flag
         }
 
         command = readSerialCommand_nonBlocking();

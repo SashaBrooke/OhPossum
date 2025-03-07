@@ -14,43 +14,37 @@
 
 #include "gimbal_configuration.h"
 
-#define FLASH_TARGET_OFFSET (256 * 1024) // Choosing to start at 256K
+#define FLASH_TARGET_OFFSET (256 * 1024)  // Choosing to start at 256K
 
 //  DEFAULT GIMBAL VALUES
-const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG        = true;             // No new settings to save on setup
-const gimbal_mode_e  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE; // Safety: Force free mode on powerup
+const bool           GIMBAL_DEFAULT_SAVED_CONFIG_FLAG        = true;              // No new settings to save on setup
+const gimbal_mode_e  GIMBAL_DEFAULT_SAFE_MODE                = GIMBAL_MODE_FREE;  // Safety: Force free mode on powerup
 const float          GIMBAL_DEFAULT_AXIS_SETPOINT            = GIMBAL_DEFAULT_UNSET_ROM;
 const float          GIMBAL_DEFAULT_AXIS_SOFT_LIMIT          = GIMBAL_DEFAULT_UNSET_ROM;
 const bool           GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS  = true;
 const int            GIMBAL_SLOW_STREAM_RATE                 = 10000;  
 const int            GIMBAL_FAST_STREAM_RATE                 = 1;
-const bool           GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS   = true;            // Must manually add desired packets
+const bool           GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS   = true;              // Must manually add desired packets
 
 static gimbal_configuration_t gc;
 
 /* Set up gimbal with default settings */
 void setupGimbal(gimbal_t *gimbal) {
-    gimbal->savedConfiguration = GIMBAL_DEFAULT_SAVED_CONFIG_FLAG;
+    gimbal->savedConfiguration  = GIMBAL_DEFAULT_SAVED_CONFIG_FLAG;
 
-    gimbal->gimbalMode = GIMBAL_DEFAULT_SAFE_MODE;
+    gimbal->gimbalMode          = GIMBAL_DEFAULT_SAFE_MODE;
 
     gimbal->panPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
-    // gimbal->tiltPositionSetpoint = GIMBAL_DEFAULT_AXIS_SETPOINT;
 
-    gimbal->panLowerLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
-    gimbal->panUpperLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
-    // gimbal->tiltLowerLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
-    // gimbal->tiltUpperLimit = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
+    gimbal->panLowerLimit       = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
+    gimbal->panUpperLimit       = GIMBAL_DEFAULT_AXIS_SOFT_LIMIT;
 
-    gimbal->streaming = GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS;
-    gimbal->streamRate = GIMBAL_SLOW_STREAM_RATE; 
+    gimbal->streaming           = GIMBAL_DEFAULT_GLOBAL_STREAMING_STATUS;
+    gimbal->streamRate          = GIMBAL_SLOW_STREAM_RATE; 
 
-    gimbal->panPositionStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
-    gimbal->panPidStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
-    gimbal->panMotorStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
-    // gimbal->tiltPositionStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
-    // gimbal->tiltPidStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
-    // gimbal->tiltMotorStream = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    gimbal->panPositionStream   = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    gimbal->panPidStream        = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
+    gimbal->panMotorStream      = GIMBAL_DEFAULT_SPECIFIC_STREAM_STATUS;
 }
 
 /* Display gimbal settings */
@@ -72,16 +66,9 @@ void displayGimbal(gimbal_t *gimbal) {
     // Pan position setpoint
     printf("Pan Position Setpoint: %.2f\n", gimbal->panPositionSetpoint);
 
-    // Tilt position setpoint
-    // printf("Tilt Position Setpoint: %.2f\n", gimbal->tiltPositionSetpoint);
-
     // Pan axis limits
     printf("Pan Lower Limit: %.2f\n", gimbal->panLowerLimit);
     printf("Pan Upper Limit: %.2f\n", gimbal->panUpperLimit);
-
-    // Tilt axis limits
-    // printf("Tilt Lower Limit: %.2f\n", gimbal->tiltLowerLimit);
-    // printf("Tilt Upper Limit: %.2f", gimbal->tiltUpperLimit);
 
     // Streaming status and rate
     printf("Streaming (global): %s\n", gimbal->streaming ? "Enabled" : "Disabled");
@@ -91,9 +78,6 @@ void displayGimbal(gimbal_t *gimbal) {
     printf("Pan position stream: %s\n", gimbal->panPositionStream ? "Enabled" : "Disabled");
     printf("Pan PID stream: %s\n", gimbal->panPidStream ? "Enabled" : "Disabled");
     printf("Pan motor stream: %s\n", gimbal->panMotorStream ? "Enabled" : "Disabled");
-    // printf("Tilt position stream: %s\n", gimbal->tiltPositionStream ? "Enabled" : "Disabled");
-    // printf("Tilt PID stream: %s\n", gimbal->tiltPidStream ? "Enabled" : "Disabled");
-    // printf("Tilt motor stream: %s\n", gimbal->tiltMotorStream ? "Enabled" : "Disabled");
 
     // Pan position controller PID values
     printf("Pan Position Controller:\n");
@@ -113,35 +97,11 @@ void displayGimbal(gimbal_t *gimbal) {
     printf("  output: %.2f\n", gimbal->panPositionController.output);
     printf("  maxMeasurement: %.2f\n", gimbal->panPositionController.maxMeasurement);
 
-    // Tilt position controller PID values
-    // printf("Tilt Position Controller:\n");
-    // printf("  Kp: %.2f\n", gimbal->tiltPositionController.Kp);
-    // printf("  Ki: %.2f\n", gimbal->tiltPositionController.Ki);
-    // printf("  Kd: %.2f\n", gimbal->tiltPositionController.Kd);
-    // printf("  tau: %.2f\n", gimbal->tiltPositionController.tau);
-    // printf("  outLimMin: %.2f\n", gimbal->tiltPositionController.outLimMin);
-    // printf("  outLimMax: %.2f\n", gimbal->tiltPositionController.outLimMax);
-    // printf("  intLimMin: %.2f\n", gimbal->tiltPositionController.intLimMin);
-    // printf("  intLimMax: %.2f\n", gimbal->tiltPositionController.intLimMax);
-    // printf("  T: %.4f\n", gimbal->tiltPositionController.T);
-    // printf("  integrator: %.2f\n", gimbal->tiltPositionController.integrator);
-    // printf("  prevError: %.2f\n", gimbal->tiltPositionController.prevError);
-    // printf("  differentiator: %.2f\n", gimbal->tiltPositionController.differentiator);
-    // printf("  prevMeasurement: %.2f\n", gimbal->tiltPositionController.prevMeasurement);
-    // printf("  output: %.2f\n", gimbal->tiltPositionController.output);
-    // printf("  maxMeasurement: %.2f\n", gimbal->tiltPositionController.maxMeasurement);
-
     // Pan encoder
     printf("Pan Encoder:\n");
     printf("  Initialised: %s\n", gimbal->panEncoder.initialised ? "Yes" : "No");
     printf("  DIR_PIN: %d\n", gimbal->panEncoder.DIR_PIN);
     printf("  Offset: %u\n", gimbal->panEncoder.offset);
-
-    // Tilt encoder
-    // printf("Tilt Encoder:\n");
-    // printf("  Initialised: %s\n", gimbal->tiltEncoder.initialised ? "Yes" : "No");
-    // printf("  DIR_PIN: %d\n", gimbal->tiltEncoder.DIR_PIN);
-    // printf("  Offset: %u\n", gimbal->tiltEncoder.offset);
 
     printf("\n");
 }
@@ -199,24 +159,6 @@ void displayGimbalConfiguration(gimbal_configuration_t *config) {
     printf("  prevMeasurement: %.2f\n", config->panPositionController.prevMeasurement);
     printf("  output: %.2f\n", config->panPositionController.output);
     printf("  maxMeasurement: %.2f\n", config->panPositionController.maxMeasurement);
-
-    // Tilt position controller PID values
-    // printf("Tilt Position Controller:\n");
-    // printf("  Kp: %.2f\n", config->tiltPositionController.Kp);
-    // printf("  Ki: %.2f\n", config->tiltPositionController.Ki);
-    // printf("  Kd: %.2f\n", config->tiltPositionController.Kd);
-    // printf("  tau: %.2f\n", config->tiltPositionController.tau);
-    // printf("  outLimMin: %.2f\n", config->tiltPositionController.outLimMin);
-    // printf("  outLimMax: %.2f\n", config->tiltPositionController.outLimMax);
-    // printf("  intLimMin: %.2f\n", config->tiltPositionController.intLimMin);
-    // printf("  intLimMax: %.2f\n", config->tiltPositionController.intLimMax);
-    // printf("  T: %.4f\n", config->tiltPositionController.T);
-    // printf("  integrator: %.2f\n", config->tiltPositionController.integrator);
-    // printf("  prevError: %.2f\n", config->tiltPositionController.prevError);
-    // printf("  differentiator: %.2f\n", config->tiltPositionController.differentiator);
-    // printf("  prevMeasurement: %.2f\n", config->tiltPositionController.prevMeasurement);
-    // printf("  output: %.2f\n", config->tiltPositionController.output);
-    // printf("  maxMeasurement: %.2f\n", config->tiltPositionController.maxMeasurement);
 
     printf("\n");
 }

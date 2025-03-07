@@ -49,13 +49,10 @@ typedef struct {
 
     // Axis setpoints
     float panPositionSetpoint;
-    // float tiltPositionSetpoint;
 
     // Axis soft limits
     float panLowerLimit;
     float panUpperLimit;
-    // float tiltLowerLimit;
-    // float tiltUpperLimit;
 
     // Global stream
     bool streaming;
@@ -65,17 +62,12 @@ typedef struct {
     bool panPositionStream;
     bool panPidStream;
     bool panMotorStream;
-    // bool tiltPositionStream;
-    // bool tiltPidStream;
-    // bool tiltMotorStream;
 
     // Axis PID controllers
     volatile PID_t panPositionController;
-    // PID_t tiltPositionController;
 
     // Axis encoders
     volatile AS5600_t panEncoder;
-    // AS5600_t tiltEncoder;
 } gimbal_t;
 
 /**
@@ -88,7 +80,6 @@ typedef struct {
 
     // Controls gains
     volatile PID_t panPositionController;
-    // volatile PID_t tiltPositionController;
 } gimbal_configuration_t;
 
 /**

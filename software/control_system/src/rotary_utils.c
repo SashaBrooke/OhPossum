@@ -30,12 +30,12 @@ calculate_rotary_error__limits(float *rotError, float measurement, float setpoin
             return ROTARYUTILS_UNALLOWED_REGION;
         }
 
-        if (setpoint < upperLimit)
+        if (setpoint <= upperLimit)
         {
             setpoint += maxMeasurement;
         }
 
-        if (measurement < upperLimit)
+        if (measurement <= upperLimit)
         {
             measurement += maxMeasurement;
         }

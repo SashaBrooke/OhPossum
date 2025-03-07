@@ -20,6 +20,7 @@
 #include "as5600.h"
 #include "command.h"
 #include "gimbal_configuration.h"
+#include "rotary_utils.h"
 
 #define FREQ2PERIOD(freq) ((freq) != 0 ? (1.0f / (freq)) : 0.0f) // Converts a frequency in Hz to a period in seconds
 #define SECS2USECS(secs)  ((secs) * 1000000)                     // Converts a time from seconds to micro-seconds
@@ -55,9 +56,10 @@
 #define CONTROLS_FREQ 1000
 
 // Homing
-#define HOMING_SPEED 0.1    // (angular position / second)
-#define HOMING_DISTANCE 40  // (angular position)
-#define HOMING_TIMEOUT 10   // (seconds)
+#define HOMING_SPEED 0.1           // (angular position / second)
+#define HOMING_DISTANCE 40         // (angular position)
+#define HOMING_TIMEOUT 10          // (seconds)
+#define SOFT_LIMIT_OFFSET_ANGLE 5  // (degrees)
 
 // Stream variables
 volatile uint16_t panPos = 0;
@@ -162,7 +164,7 @@ void setupAxisLimits(gimbal_t *gimbal) {
         }
 
         if (atPanLowerLimit) {
-            tmpPanLowerLimit = (float)panPos; // + some safe offset
+            tmpPanLowerLimit = (float)panPos;
             printf("#### Lower limit found at %.1f ####\n", tmpPanLowerLimit);
             // gimbal->panEncoder.offset = gimbal->panLowerLimit;
             break;
@@ -187,7 +189,7 @@ void setupAxisLimits(gimbal_t *gimbal) {
         }
 
         if (atPanUpperLimit) {
-            tmpPanUpperLimit = (float)panPos; // + some safe offset
+            tmpPanUpperLimit = (float)panPos;
             printf("#### Upper limit found at %.1f ####\n", tmpPanUpperLimit);
             break;
         } else {
@@ -201,7 +203,9 @@ void setupAxisLimits(gimbal_t *gimbal) {
 
     // Move to a central position
     float panMidpoint;
-    if (tmpPanLowerLimit < tmpPanUpperLimit) {
+    if (tmpPanLowerLimit == tmpPanUpperLimit) {
+        panMidpoint = tmpPanLowerLimit;
+    } else if (tmpPanLowerLimit < tmpPanUpperLimit) {
         panMidpoint = (tmpPanLowerLimit + tmpPanUpperLimit) / 2;
     } else {
         panMidpoint = fmod(tmpPanLowerLimit + (AS5600_RAW_ANGLE_MAX + tmpPanUpperLimit - tmpPanLowerLimit) / 2, AS5600_RAW_ANGLE_MAX);
@@ -219,11 +223,22 @@ void setupAxisLimits(gimbal_t *gimbal) {
         if (fabs((float)panPos - panMidpoint) < HOMING_DISTANCE) {
             printf("At midpoint (%u actual vs %.1f setpoint)\n", panPos, panMidpoint);
 
-            // Actually set soft limits
-            gimbal->panLowerLimit = tmpPanLowerLimit;
-            gimbal->panUpperLimit = tmpPanUpperLimit;
-            // gimbal->tiltLowerLimit = tmpTiltLowerLimit;
-            // gimbal->tiltUpperLimit = tmpTiltUpperLimit;
+            float gimbalRom = GIMBAL_DEFAULT_UNSET_ROM;
+            calculate_rotary_error(&gimbalRom, tmpPanLowerLimit, tmpPanUpperLimit, AS5600_ANGULAR_RESOLUTION);
+
+            printf("%.1f\n", 2 * round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW));
+            
+            // If the gimbal has sufficient range of motion to apply offsets, actually set soft limits
+            if (gimbalRom > 2 * round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW)) {
+                gimbal->panLowerLimit = tmpPanLowerLimit + round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW);
+                gimbal->panUpperLimit = tmpPanUpperLimit - round(SOFT_LIMIT_OFFSET_ANGLE * AS5600_DEGREES_TO_RAW);
+                // gimbal->tiltLowerLimit = tmpTiltLowerLimit;
+                // gimbal->tiltUpperLimit = tmpTiltUpperLimit;
+            } else {
+                printf("Error: Gimbal range of motion not sufficient to set soft limit safety offsets. Exiting homing process.\n");
+                gimbal->gimbalMode = GIMBAL_MODE_FREE;
+                return;
+            }
 
             sleep_ms(500); // Pause at midpoint
 

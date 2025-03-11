@@ -1,2 +1,12 @@
-# Lock files
+# Ignore all files in software build directories
+software/control_system/build/
+
+# Ignore IDE settings
+.vscode/
+
+# Ignore compiled binaries
+*.o
+*.exe
+
+# Ignore lock files
 ~$*

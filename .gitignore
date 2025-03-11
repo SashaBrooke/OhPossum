@@ -7,3 +7,6 @@ software/control_system/build/
 # Ignore compiled binaries
 *.o
 *.exe
+
+# Ignore lock files
+~$*

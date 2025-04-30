@@ -8,8 +8,17 @@ project('my_app', 'cpp',
     ]
 )
 
-# Add the rpicam-apps subproject
-rpicam = subproject('rpicam-apps')
+# Add the rpicam-apps subproject (with opencv and hailo enabled)
+rpicam = subproject('rpicam-apps',
+    default_options: [
+        'enable_libav=enabled',
+        'enable_drm=enabled',
+        'enable_egl=enabled',
+        'enable_qt=enabled',
+        'enable_opencv=enabled',
+        'enable_hailo=enabled',
+    ]
+)
 
 # Get the rpicam library
 rpicam_lib = rpicam.get_variable('rpicam_app')

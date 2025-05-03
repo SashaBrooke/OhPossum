@@ -5,6 +5,3 @@
 [submodule "software/pico-sdk"]
 	path = software/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk.git
-[submodule "software/gimbal-control-board/subprojects/rpicam-apps"]
-	path = software/gimbal-control-board/subprojects/rpicam-apps
-	url = https://github.com/raspberrypi/rpicam-apps.git

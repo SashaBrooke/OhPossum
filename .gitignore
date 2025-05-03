@@ -1,5 +1,6 @@
 # Ignore all files in software build directories
 software/control_system/build/
+software/gimbal-control-board/build/
 
 # Ignore IDE settings
 .vscode/

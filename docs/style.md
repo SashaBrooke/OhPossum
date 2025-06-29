@@ -33,6 +33,11 @@ Branching will be used for any new features or refactors with the following nami
 
 **General structure:** `category/branch-name` (where the category is one of the options described in commit categories)
 
+### Commit Message
+The commit message should be phrased in the imperative tone (i.e. as if instructing someone to make the change). If done, the commit message would produce the change implemented in the commit.
+
+**Example:** `Update pico-sdk submodule` or `Implement new object tracking feature`
+
 ## C/C++ Code style
 - Camel case functions, parameters, members and variables
 - Snake case struct names with `_t` suffix

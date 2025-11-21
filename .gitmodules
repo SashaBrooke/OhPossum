@@ -1,7 +1,3 @@
-
-[submodule "software/ultralytics"]
-	path = software/ultralytics
-	url = https://github.com/ultralytics/ultralytics.git
-[submodule "software/pico-sdk"]
-	path = software/pico-sdk
-	url = https://github.com/raspberrypi/pico-sdk.git
+[submodule "software/op-controls"]
+	path = software/op-controls
+	url = https://github.com/SashaBrooke/op-controls.git

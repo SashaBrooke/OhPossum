@@ -1,5 +1,5 @@
 ---
-Name: Task - name should reference relevant branch
+Name: Task - Try and have the branch and task names link where possible, if they are at the same level (i.e. not a sub-task)
 About: A single, actionable piece of work
 Title: "[Task] "
 ---
@@ -19,9 +19,7 @@ Title: "[Task] "
 
 ## Definition of Done
 - [ ] Code reviewed and approved
-- [ ] Tests written and passing
-- [ ] Documentation updated
-- [ ] Merged to main
+
 
 ## Notes
 <!-- Context, links, or dependencies (optional) -->

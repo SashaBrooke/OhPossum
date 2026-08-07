@@ -2,8 +2,6 @@
 Name: Task - name should reference relevant branch
 About: A single, actionable piece of work
 Title: "[Task] "
-Labels: ["hardware", "documentation"]
-Assignees: ''
 ---
 
 ## What

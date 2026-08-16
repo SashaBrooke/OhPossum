@@ -22,4 +22,4 @@ Title: "[Task] "
 
 
 ## Notes
-<!-- Context, links, or dependencies (optional) -->
+<!-- Context, links, or other resources (optional) -->

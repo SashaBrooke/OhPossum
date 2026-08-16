@@ -1,7 +1,6 @@
 ---
-Name: Task - Try and have the branch and task names link where possible, if they are at the same level (i.e. not a sub-task)
+Name: Task
 About: A single, actionable piece of work
-Title: "[Task] "
 ---
 
 ## What
@@ -15,11 +14,11 @@ Title: "[Task] "
 
 ## Acceptance Criteria
 - [ ] 
-- [ ] 
 
 ## Definition of Done
+- [ ] Documentation updated (if required)
+- [ ] Acceptance criteria satisfied
 - [ ] Code reviewed and approved
-
 
 ## Notes
 <!-- Context, links, or other resources (optional) -->

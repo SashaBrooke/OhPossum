@@ -1,6 +1,7 @@
 ---
-Name: Task
-About: A single, actionable piece of work
+name: Task
+about: A single, actionable piece of work
+title: "[Task]"
 ---
 
 ## What

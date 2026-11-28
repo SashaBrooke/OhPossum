@@ -98,7 +98,7 @@ What The System must do.
 Performance, reliability, safety. 
 |ID|Requirement|Verification Method|Stage|
 |---|---|---|---|
-|PrR-01|The Turret tracking loop shall update at >=30 Hz|T|All|
+|PrR-01|The Turret tracking loop shall update at >=30 Hz|T|STG-2&3|
 |PrR-02|The Turret shall be able track a target moving >=0.833 m/s in the pan axis|T|STG-1|
 |PrR-03|The Turret shall be able track a target moving >=0.833 m/s in the tilt axis|T|STG-2|
 |PrR-04|The Turret shall rotate about the pan axis at a speed of 1.67 rad/s|T|STG-1|
@@ -227,52 +227,59 @@ Verification runs in 3 staged efforts to match the build strategy: stage 1 verif
 |TE-3|Analysis/Simulation/CAD|Torque/stress and thermal checks for analysis-verified items|
 |TE-4|Outdoors|Covered area, water resovoir, splash-safe layout|
 #### Test Cases Affecting All Stages 
-|Test|Verifies|Acceptance Criteria|Environment|
-|---|---|---|---|
-|TC-ALL-01|||
+|Test|Verifies|Pre-Condition|Acceptance Criteria|Environment|
+|---|---|---|---|---|
+|TC-ALL-01|FR-07|The System is in motion and deterrent is active (if applicable - STG-3)|Test The System in MANUAL, AUTO-TRACK or AUTO-TRACK DETERRENT ENABLED modes, when pre-condition is met and user triggers E-STOP, time to de-energize actuators and deterrent (if applicable - STG-3) must be <200ms|TE-1 (STG-1), TE-2 (STG-2) or TE-4 (STG-3)|
+|TC-ALL-02|RL-01|Nil|Demonstration of The System in MANUAL, AUTO-TRACK or AUTO-TRACK DETERRENT ENABLED modes, with 1 target engagement >=20 seconds every minute for 10 minutes without any loss of function|TE-1 (STG-1), TE-2 (STG-2) or TE-4 (STG-3)| 
+|TC-ALL-03|RL-02|During RL-01 test run|Test no electrical components in The System BOM exceeds temperature ranges and/or durations listed in their individual data sheets|TE-1 (STG-1), TE-2 (STG-2) or TE-4 (STG-3)|
+|TC-ALL-04|RL-04||||
+|TC-ALL-05|SR-01||||
+|TC-ALL-06|SR-03||||
+|TC-ALL-07|SR-04||||
+|TC-ALL-08|ItR-01||||
 #### Stage 1 - Pan-Axis (Single-Axis) Test Cases
-|Test|Verifies|Acceptance Criteria|Environment|
-|---|---|---|---|
-|TC-STG1-01||||
-|TC-STG1-02||||
-|TC-STG1-03||||
-|TC-STG1-04||||
-|TC-STG1-05||||
-|TC-STG1-06||||
-|TC-STG1-07||||
-|TC-STG1-08||||
+|Test|Verifies|Pre-Condition|Acceptance Criteria|Environment|
+|---|---|---|---|---|
+|TC-STG1-01|PrR-01||||
+|TC-STG1-02|||||
+|TC-STG1-03|||||
+|TC-STG1-04|||||
+|TC-STG1-05|||||
+|TC-STG1-06|||||
+|TC-STG1-07|||||
+|TC-STG1-08|||||
 
 #### Stage 2 - Dual-Axis (Pan & Tilt) Test Cases
-|Test|Verifies|Acceptance Criteria|Environment|
-|---|---|---|---|
-|TC-STG2-01||||
-|TC-STG2-02||||
-|TC-STG2-03||||
-|TC-STG2-04||||
-|TC-STG2-05||||
-|TC-STG2-06||||
-|TC-STG2-07||||
-|TC-STG2-08||||
+|Test|Verifies|Pre-Condition|Acceptance Criteria|Environment|
+|---|---|---|---|---|
+|TC-STG2-01|||||
+|TC-STG2-02|||||
+|TC-STG2-03|||||
+|TC-STG2-04|||||
+|TC-STG2-05|||||
+|TC-STG2-06|||||
+|TC-STG2-07|||||
+|TC-STG2-08|||||
 
 #### Stage 3 - Dual-Axis, Deterrent Enabled Test Cases
-|Test|Verifies|Acceptance Criteria|Environment|
-|---|---|---|---|
-|TC-STG3-01||||
-|TC-STG3-02||||
-|TC-STG3-03||||
-|TC-STG3-04||||
-|TC-STG3-05||||
-|TC-STG3-06||||
-|TC-STG3-07||||
-|TC-STG3-08||||
+|Test|Verifies|Pre-Condition|Acceptance Criteria|Environment|
+|---|---|---|---|---|
+|TC-STG3-01|||||
+|TC-STG3-02|||||
+|TC-STG3-03|||||
+|TC-STG3-04|||||
+|TC-STG3-05|||||
+|TC-STG3-06|||||
+|TC-STG3-07|||||
+|TC-STG3-08|||||
 
 ## Risk Register
 ### Risks/Likelihood/Impact/Mitigation
 |ID|Risk|Likelihood|Impact|Mitigation|Stage|
 |---|---|---|---|---|---|
-|RK-1|Data corruption & noise when transmitting USB through slip ring||||STG-1&2|
-|RK-2|Data corruption & noise when transmitting ethernet through slip ring||||STG-1&2|
-|RK-3|Motor overheats/stalls from continuous tracking||||All|
+|RK-1|Data corruption & noise when transmitting USB through slip ring|Medium|High|Low fidelity, small scope test: Feed USB data through slip, check for data corruption & noise|STG-1&2|
+|RK-2|Data corruption & noise when transmitting ethernet through slip ring|||Low fidelity, small scope test: Feed ethernet data through slip, check for data corruption & noise|STG-1&2|
+|RK-3|Motor overheats/stalls from continuous tracking|||Tune the motors, check success during TC-ALL-03|All|
 |RK-4|Water contacts live electronics||||STG-3|
 |RK-5|False target triggers unwanted fire||||STG-3|
 |RK-6|Loss of target tracking||||STG-2|

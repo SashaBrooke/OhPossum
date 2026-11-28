@@ -226,17 +226,45 @@ Verification runs in 3 staged efforts to match the build strategy: stage 1 verif
 |TE-2|Bench (dual axis)|Desktop, bench PSU, moving or fixed target, automatic tracking|
 |TE-3|Analysis/Simulation/CAD|Torque/stress and thermal checks for analysis-verified items|
 |TE-4|Outdoors|Covered area, water resovoir, splash-safe layout|
+#### Test Cases Affecting All Stages 
+|Test|Verifies|Acceptance Criteria|Environment|
+|---|---|---|---|
+|TC-ALL-01|||
 #### Stage 1 - Pan-Axis (Single-Axis) Test Cases
 |Test|Verifies|Acceptance Criteria|Environment|
 |---|---|---|---|
-|||||
+|TC-STG1-01||||
+|TC-STG1-02||||
+|TC-STG1-03||||
+|TC-STG1-04||||
+|TC-STG1-05||||
+|TC-STG1-06||||
+|TC-STG1-07||||
+|TC-STG1-08||||
+
 #### Stage 2 - Dual-Axis (Pan & Tilt) Test Cases
 |Test|Verifies|Acceptance Criteria|Environment|
 |---|---|---|---|
+|TC-STG2-01||||
+|TC-STG2-02||||
+|TC-STG2-03||||
+|TC-STG2-04||||
+|TC-STG2-05||||
+|TC-STG2-06||||
+|TC-STG2-07||||
+|TC-STG2-08||||
 
 #### Stage 3 - Dual-Axis, Deterrent Enabled Test Cases
 |Test|Verifies|Acceptance Criteria|Environment|
 |---|---|---|---|
+|TC-STG3-01||||
+|TC-STG3-02||||
+|TC-STG3-03||||
+|TC-STG3-04||||
+|TC-STG3-05||||
+|TC-STG3-06||||
+|TC-STG3-07||||
+|TC-STG3-08||||
 
 ## Risk Register
 ### Risks/Likelihood/Impact/Mitigation

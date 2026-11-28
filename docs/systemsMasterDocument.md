@@ -275,17 +275,17 @@ Verification runs in 3 staged efforts to match the build strategy: stage 1 verif
 
 ## Risk Register
 ### Risks/Likelihood/Impact/Mitigation
-|ID|Risk|Likelihood|Impact|Mitigation|Stage|
-|---|---|---|---|---|---|
-|RK-1|Data corruption & noise when transmitting USB through slip ring|Medium|High|Low fidelity, small scope test: Feed USB data through slip, check for data corruption & noise|STG-1&2|
-|RK-2|Data corruption & noise when transmitting ethernet through slip ring|||Low fidelity, small scope test: Feed ethernet data through slip, check for data corruption & noise|STG-1&2|
-|RK-3|Motor overheats/stalls from continuous tracking|||Tune the motors, check success during TC-ALL-03|All|
-|RK-4|Water contacts live electronics||||STG-3|
-|RK-5|False target triggers unwanted fire||||STG-3|
-|RK-6|Loss of target tracking||||STG-2|
-|RK-8|Turret tips over during extreme or quick sweeps||||
-|RK-9|3D printed gears fail||||
-|RK-10|Software hangs but leaves system active (motors & deterrent)||||
-|RK-11|Electrical engineering failure due to lack of discipline knowledge||||
-|RK-12|Difficulty/inability to update firmware due to physical access||||
-|RK-13|Electrical component failure, and lack of modularity/ability to easily replace||||All|
+|ID|Risk|Likelihood|Impact|Mitigation|Stage|Status|
+|---|---|---|---|---|---|---|
+|RK-1|Data corruption & noise when transmitting USB through slip ring|Medium|High|Low fidelity, small scope test: Feed USB data through slip, check for data corruption & noise|STG-1&2|Pending mitigation|
+|RK-2|Data corruption & noise when transmitting ethernet through slip ring|||Low fidelity, small scope test: Feed ethernet data through slip, check for data corruption & noise|STG-1&2|Pending mitigation|
+|RK-3|Motor overheats/stalls from continuous tracking|||Tune the motors, check success during TC-ALL-03|All|Pending mitigation|
+|RK-4|Water contacts live electronics||||STG-3|Pending task creation|
+|RK-5|False target triggers unwanted fire||||STG-3|Pending task creation|
+|RK-6|Loss of target tracking||||STG-2|Pending task creation|
+|RK-8|Turret tips over during extreme or quick sweeps|||||Pending task creation|
+|RK-9|3D printed gears fail|||||Pending task creation|
+|RK-10|Software hangs but leaves system active (motors & deterrent)|||||Pending task creation|
+|RK-11|Electrical engineering failure due to lack of discipline knowledge|||||Pending task creation|
+|RK-12|Difficulty/inability to update firmware due to physical access|||||Pending task creation|
+|RK-13|Electrical component failure, and lack of modularity/ability to easily replace||||All|Pending task creation|

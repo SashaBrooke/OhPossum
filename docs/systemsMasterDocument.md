@@ -41,23 +41,23 @@ Finally, deterrent functionality will be added to the system - this will be term
 |Use Case ID| Use Case | Summary | 
 | --- | ---| --- |
 | UC-1 | Single axis bench test | Prove the mechanical, electrical and software interfaces|
-| UC-2 | Pan/tilt axis bench test | Prove mechanical, electrical and software interfaces for both axis prior to full implementation
+| UC-2 | Pan/tilt axis bench test | Prove mechanical, electrical and software interfaces for both axis prior to full implementation|
 | UC-3| Manual operation | Operator uses manual inputs to control pan/tilt axis from a User Interface (UI)|
-| UC-4 | Deterrent | Automatically track and identify, using a water stream to deter the target
+| UC-4 | Deterrent | Automatically track and identify, using a water stream to deter the target|
 ### Operating Environments
 |Environment| Conditions | Notes | 
 | --- | ---| --- |
-|Bench test/development| 5-40 degrees celsius, located on a desk, powered by a bench PSU | For single and dual axis bench test (UC-1 & UC-2)
+|Bench test/development| 5-40 degrees celsius, located on a desk, powered by a bench PSU | For single and dual axis bench test (UC-1 & UC-2)|
 |Outside - under cover | 5-40 degrees celsius, outdoor humidity, no rain on electronics |  
 ### Operational Modes
 |Mode|Description|Entry/Exit|
 |---|---|---|
 |OFF|Unpowered|Power turned off/power turned on|
-|STANDBY|Powered, homing functions have been performed, deterrent system disabled| Enters mode directly after power on / exits upon selection of any other state 
-|MANUAL|Operator drives pan/tilt and enables/disables deterrent | User selects manual mode / exits upon selection of any other state
-|AUTO-TRACK|Detects and follows a target, deterrent disabled | User selects AUTO-TRACK mode / exits upon selection of another state 
-|AUTO-TRACK DETERRENT ENABLED|Detects and follows a target, when a valid target is locked, deterrent is enabled|User selects AUTO-TRACK DETERRENT ENABLED mode / exits upon selection of any other state
-|EMERGENCY STOP|Emergency stop breaks motor & deterrent circuits, stopping motor motion and disabling deterrent |User enables emergency stop/user disables emergency stop and begins TBD restart process
+|STANDBY|Powered, homing functions have been performed, deterrent system disabled| Enters mode directly after power on / exits upon selection of any other state |
+|MANUAL|Operator drives pan/tilt and enables/disables deterrent | User selects manual mode / exits upon selection of any other state|
+|AUTO-TRACK|Detects and follows a target, deterrent disabled | User selects AUTO-TRACK mode / exits upon selection of another state|
+|AUTO-TRACK DETERRENT ENABLED|Detects and follows a target, when a valid target is locked, deterrent is enabled|User selects AUTO-TRACK DETERRENT ENABLED mode / exits upon selection of any other state|
+|EMERGENCY STOP|Emergency stop breaks motor & deterrent circuits, stopping motor motion and disabling deterrent |User enables emergency stop/user disables emergency stop and begins TBD restart process|
 ### Support & Maintenance Needs
 - Consumables:
     - Refill water reservoir 
@@ -83,29 +83,29 @@ Finally, deterrent functionality will be added to the system - this will be term
 What The System must do.
 |ID|Requirement|Verification Method|Stage|
 |---|---|---|---|
-|FR-01|The Turret shall detect a target of size >0.1m^2 but <1.0m^2 within range specified in PR-01|T|STG-2
-|FR-02| The Turret camera shall acquire a video stream of a forward field of view large enough to satisfy FR-01|D|STG-2
-|FR-03|The Turret shall rotate the pan axis to a commanded angle +/- TBD degree of accuracy|T|STG-1|
-|FR-04|The Turret shall rotate the tilt axis to a commanded angle  +/- TBD degree of accuracy|T|STG-2|
+|FR-01|The Turret shall detect a target of size >0.1m^2 but <1.0m^2 within range specified in PR-01|T|STG-2|
+|FR-02| The Turret camera shall acquire a video stream of a forward field of view large enough to satisfy FR-01|D|STG-2|
+|FR-03|The Turret shall rotate the pan axis to a commanded angle +/- 2 degrees of accuracy|T|STG-1|
+|FR-04|The Turret shall rotate the tilt axis to a commanded angle  +/- 2 degrees of accuracy|T|STG-2|
 |FR-05|The HMI shall provide manual positional control of pan axis position|D|STG-1|
 |FR-06|The HMI shall provide manual positional control of tilt axis position|D|STG-2|
-|FR-07|The System shall enter the EMERGENCY-STOP state within 200ms of the E-STOP being triggered by a user|T|All 
-|FR-08|When in the AUTO-TRACK DETERRENT ENABLED mode The System shall activate The Deterrent only when a valid target is acquired|T|STG-2
+|FR-07|The System shall enter the EMERGENCY-STOP state within 200ms of the E-STOP being triggered by a user|T|All|
+|FR-08|When in the AUTO-TRACK DETERRENT ENABLED mode The System shall activate The Deterrent only when a valid target is acquired|T|STG-2|
 |FR-09|The HMI shall provide manual control of The Deterrent, specifically the ability to disable or enable The Deterrent|D|STG-2|
-|FR-10|When in the AUTO-TRACK or AUTO-TRACK DETERRENT ENABLED mode The Turret shall automatically rotate the pan and tilt axis to self-calculated angles|D|STG-2
+|FR-10|When in the AUTO-TRACK or AUTO-TRACK DETERRENT ENABLED mode The Turret shall automatically rotate the pan and tilt axis to self-calculated angles|D|STG-2|
 
 ### Non-Functional Requirements
 Performance, reliability, safety. 
 |ID|Requirement|Verification Method|Stage|
 |---|---|---|---|
-|PrR-01|The Turret tracking loop shall update at >=TBD Hz|T|All|
-|PrR-02|The Turret shall be able track a target moving >=TBD m/s in the pan axis|T|STG-1|
-|PrR-03|The Turret shall be able track a target moving >=TBD m/s in the tilt axis|T|STG-2|
-|PrR-04|The Turret shall rotate about the pan axis at a speed of TBD rad/s|T|STG-1|
-|PrR-05|The Turret shall rotate about the tilt axis at a speed of TBD rad/s|T|STG-2|
+|PrR-01|The Turret tracking loop shall update at >=30 Hz|T|All|
+|PrR-02|The Turret shall be able track a target moving >=0.833 m/s in the pan axis|T|STG-1|
+|PrR-03|The Turret shall be able track a target moving >=0.833 m/s in the tilt axis|T|STG-2|
+|PrR-04|The Turret shall rotate about the pan axis at a speed of 1.67 rad/s|T|STG-1|
+|PrR-05|The Turret shall rotate about the tilt axis at a speed of 1.67 rad/s|T|STG-2|
 |PrR-06|The Turret shall have a pan axis range of >=180 degrees|T|STG-1|
 |PrR-07|The Turret shall have a tilt axis range of >=90 degrees|T|STG-2|
-|PrR-08|The System shall have an effective operating range >=0.5m and <=3m|T|STG-3|
+|PrR-08|The System shall have an effective operating range >=0.5m and <=5m|T|STG-3|
 |PrR-09|The System shall have an aim error <=+/-3 degrees when actively tracking a valid target moving at the speeds specified in PrR-02 & PrR-03|T|STG-3|
 
 |ID|Requirement|Verification Method|Stage|
@@ -127,7 +127,7 @@ External systems, users, hardware
 |ID|Requirement|Verification Method|Stage|
 |---|---|---|---|
 |ItR-01|All actuators shall accept TBD Hz PWM signals|I|All|
-|ItR-02|The Deterrent must attach to Stage 1&2 implementation|D|STG-3
+|ItR-02|The Deterrent must attach to Stage 1&2 implementation|D|STG-3|
 |ItR-03|The operator UI must connect over TBD protocol (USB, Ethernet)|D|STG-1|
 
 ### Constraints

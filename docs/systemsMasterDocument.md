@@ -83,14 +83,14 @@ Finally, deterrent functionality will be added to the system - this will be term
 What The System must do.
 |ID|Requirement|Verification Method|Stage|
 |---|---|---|---|
-|FR-01|The Turret shall detect a target of size >0.1m^2 but <1.0m^2 within range specified in PR-01|T|STG-2|
+|FR-01|The Turret shall detect a target of size >0.1m^2 but <0.6m^2 within range specified in PrR-08|T|STG-2|
 |FR-02| The Turret camera shall acquire a video stream of a forward field of view large enough to satisfy FR-01|D|STG-2|
-|FR-03|The Turret shall rotate the pan axis to a commanded angle +/- 2 degrees of accuracy|T|STG-1|
-|FR-04|The Turret shall rotate the tilt axis to a commanded angle  +/- 2 degrees of accuracy|T|STG-2|
+|FR-03|The Turret shall rotate the pan axis to a commanded angle within +/- 2 degrees of accuracy|T|STG-1|
+|FR-04|The Turret shall rotate the tilt axis to a commanded angle within +/- 2 degrees of accuracy|T|STG-2|
 |FR-05|The HMI shall provide manual positional control of pan axis position|D|STG-1|
 |FR-06|The HMI shall provide manual positional control of tilt axis position|D|STG-2|
 |FR-07|The System shall enter the EMERGENCY-STOP state within 200ms of the E-STOP being triggered by a user|T|All|
-|FR-08|When in the AUTO-TRACK DETERRENT ENABLED mode The System shall activate The Deterrent only when a valid target is acquired|T|STG-2|
+|FR-08|When in the AUTO-TRACK DETERRENT ENABLED mode The System shall activate The Deterrent only when a valid target is acquired with target certainty >=80% and commanded angle within +/- 2 degrees of accuracy|T|STG-2|
 |FR-09|The HMI shall provide manual control of The Deterrent, specifically the ability to disable or enable The Deterrent|D|STG-2|
 |FR-10|When in the AUTO-TRACK or AUTO-TRACK DETERRENT ENABLED mode The Turret shall automatically rotate the pan and tilt axis to self-calculated angles|D|STG-2|
 
@@ -105,7 +105,7 @@ Performance, reliability, safety.
 |PrR-05|The Turret shall rotate about the tilt axis at a speed of 1.67 rad/s|T|STG-2|
 |PrR-06|The Turret shall have a pan axis range of >=180 degrees|T|STG-1|
 |PrR-07|The Turret shall have a tilt axis range of >=90 degrees|T|STG-2|
-|PrR-08|The System shall have an effective operating range >=0.5m and <=5m|T|STG-3|
+|PrR-08|The System shall have an effective operating range >=1m and <=5m|T|STG-3|
 |PrR-09|The System shall have an aim error <=+/-3 degrees when actively tracking a valid target moving at the speeds specified in PrR-02 & PrR-03|T|STG-3|
 
 |ID|Requirement|Verification Method|Stage|
